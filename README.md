@@ -2,6 +2,8 @@
 
 A very simple PHP app that stores twitter-like status updates in a sqlite database. It also generates a JSON feed, that can be used as a source for the [micro.blog](https://micro.blog/) service. It is aimed at people who would like to host their own micro.blog, but want to avoid using Wordpress for it.
 
+![a screenshot of the microblog app](https://user-images.githubusercontent.com/1279725/34184164-9567a4b2-e51e-11e7-9317-d737ef3423f0.png)
+
 There is a timeline view of your own posts, as well as a simple 'compose post' page behind a login form. Right now, only a unique ID, the post content and creation timestamp are saved for each entry, so this is only suitable for one user. (Multiple users would each have to install in their own directories.)
 
 The entire design is inside a single theme file [microblog.css](microblog.css) and can be modified easily. The site HTML is pretty straightforward and should be easy to style.
