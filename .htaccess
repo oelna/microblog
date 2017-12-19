@@ -1,0 +1,31 @@
+# this line may need to be removed on other hosts!
+Action php-fcgid /fcgi-bin/php-fcgi-starter-7.0
+
+<Files ~ "\.db$">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /microblog
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*) index.php [L]
+
+</IfModule>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
