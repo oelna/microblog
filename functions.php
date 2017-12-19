@@ -13,7 +13,7 @@ function autolink($text='') {
 	return preg_replace_callback("#$pattern#i", function($matches) {
 		$input = $matches[0];
 		$url = preg_match('!^https?://!i', $input) ? $input : "http://$input";
-		return '<a href="' . $url . '" rel="nofollow" target="_blank">' . "$input</a>";
+		return '<a href="' . $url . '" data-external="true">' . "$input</a>";
 	}, $text);
 }
 
