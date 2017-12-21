@@ -26,7 +26,14 @@
 			);
 
 			rebuild_feed();
-			if($config['ping'] === true) ping_microblog();
+			if($config['ping'] == true) ping_microblog();
+			if($config['crosspost_to_twitter'] == true) {
+				$twitter_response = json_decode(twitter_post_status($_POST['message']), true);
+
+				if(!empty($twitter_response['errors'])) {
+					$message['message'] .= ' (But crossposting to twitter failed!)';
+				}
+			}
 		}
 	}
 
@@ -34,6 +41,7 @@
 <html lang="<?= $config['language'] ?>" class="postform">
 <head>
 	<title>micro.blog</title>
+	<meta name="viewport" content="width=device-width" />
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
 </head>
 <body>

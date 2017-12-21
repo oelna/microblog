@@ -9,6 +9,7 @@
 <html lang="<?= $config['language'] ?>" class="post">
 <head>
 	<title>micro.blog</title>
+	<meta name="viewport" content="width=device-width" />
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
 </head>
 <body>

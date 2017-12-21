@@ -26,7 +26,14 @@ $config = array(
 	'admin_user' => 'admin',
 	'admin_pass' => 'dove-life-bird-lust',
 	'cookie_life' => 60*60*24*7*4, // cookie life in seconds
-	'ping' => true // enable automatic pinging of the micro.blog service
+	'ping' => true, // enable automatic pinging of the micro.blog service
+	'crosspost_to_twitter' => false, // set this to true to automatically crosspost to a twitter account (requires app credentials, see below)
+	'twitter' => array( // get your tokens over at https://dev.twitter.com/apps
+		'oauth_access_token' => '',
+		'oauth_access_token_secret' => '',
+		'consumer_key' => '',
+		'consumer_secret' => ''
+	)
 );
 
 //connect or create the database and tables

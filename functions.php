@@ -119,3 +119,23 @@ function rebuild_feed($amount=10) {
 		return true;
 	} else return false;
 }
+
+function twitter_post_status($status='') {
+	global $config;
+	require_once(ROOT.DS.'twitter_api.php');
+
+	if(empty($status)) return array('errors' => 1);
+	if(empty($config['twitter']['oauth_access_token']) ||
+		empty($config['twitter']['oauth_access_token_secret']) ||
+		empty($config['twitter']['consumer_key']) ||
+		empty($config['twitter']['consumer_secret'])) return array('errors' => 2);
+
+	$url = 'https://api.twitter.com/1.1/statuses/update.json';
+	$postfields = array(
+		'status' => $status,
+		'trim_user' => 1
+	);
+
+	$twitter = new TwitterAPIExchange($config['twitter']);
+	return $twitter->buildOauth($url, 'POST')->setPostfields($postfields)->performRequest();
+}
