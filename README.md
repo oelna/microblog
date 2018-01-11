@@ -8,14 +8,15 @@ There is a timeline view of your own posts, as well as a simple 'compose post' p
 
 The entire design is inside a single theme file [microblog.css](microblog.css) and can be modified easily. The site HTML is pretty straightforward and should be easy to style.
 
-The app requires at least PHP 5.5 and was tested on 7.0
+The app requires at least PHP 5.5 and was tested on 7.0. It needs mbstring, curl and sqlite modules. 
 For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](https://github.com/J7mbo/twitter-api-php)
 
 ### Installation
 
 - Copy the files to a directory on your webserver
 - edit [config.php](config.php) and adjust the settings if you like (at least set a new password!)
-- edit [.htaccess](.htaccess) and set `RewriteBase` to a path matching your installation directory
+- for Apache: edit [.htaccess](.htaccess) and set `RewriteBase` to a path matching your installation directory
+- for nginx: have a rule similar to `try_files $uri $uri/ /index.php?$args;` for the microblog-location
 - optional: modify the theme file [microblog.css](microblog.css)
 - optional: enable crossposting to twitter by filling in app credentials in [config.php](config.php#L32-L35) (instructions there)
 
@@ -24,6 +25,7 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 - add a regular RSS or ATOM feed in addition to the JSON feed, for versatility and integration with other services and readers
 - make interface adjustments to be able to delete status posts
 - test whether the [ping function](http://help.micro.blog/2017/api-feeds/) actually works
+- improve html rendering 
 
 ### Support my work
 
