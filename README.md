@@ -13,7 +13,7 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 
 ### Installation
 
-- Copy the files to a directory on your webserver
+- copy the files to a directory on your webserver
 - copy (or rename) [config-dist.php](config-dist.php) to config.php and adjust the settings if you like (at least set a new password!)
 - for Apache: edit [.htaccess](.htaccess) and set `RewriteBase` to a path matching your installation directory
 - for nginx: have a rule similar to `try_files $uri $uri/ /index.php?$args;` for the microblog-location
@@ -25,10 +25,11 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 - add a regular RSS or ATOM feed in addition to the JSON feed, for versatility and integration with other services and readers
 - make interface adjustments to be able to delete status posts
 - test whether the [ping function](http://help.micro.blog/2017/api-feeds/) actually works
-- improve html rendering 
+- improve html rendering
+- maybe improve theming support by adding a themes dir, moving the CSS there and setting theme via config file
 
 ### Support my work
 
-The app is provided for free, but if you'd like to support what I do, please consider tipping.
+The app is provided for free, but if you'd like to support what I do, please consider tipping. It is greatly appreciated. Can't promise it'll buy you software support, but if you send a reasonable PR, I'm happy to accept improvements to the app.
 
-[![Gittip](https://www.dropbox.com/s/23emy7ngeqdnrrc/logo_gittip.png?raw=1)](https://www.gittip.com/oelna/)  [![Flattr](https://www.dropbox.com/s/20legqru72ffddw/logo_flattr.png?raw=1)](https://flattr.com/submit/auto?user_id=oelna&url=https%3A%2F%2Fgithub.com%2Foelna%2Fmicroblog&title=microblog&language=en&tags=github&category=software)
+[Patreon](https://patreon.com/oelna) [Paypal](https://www.paypal.me/oelna) [Flattr](https://flattr.com/@oelna)
