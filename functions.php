@@ -6,17 +6,6 @@ function path($fragment=null) {
 	return (!empty($config['path'][$fragment])) ? $config['path'][$fragment] : false;
 }
 
-function autolink($text='') {
-	// https://stackoverflow.com/a/10002262/3625228
-	$pattern = '(?xi)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))';
-
-	return preg_replace_callback("#$pattern#i", function($matches) {
-		$input = $matches[0];
-		$url = preg_match('!^https?://!i', $input) ? $input : "http://$input";
-		return '<a href="' . $url . '" data-external="true">' . "$input</a>";
-	}, $text);
-}
-
 function db_insert($message, $timestamp=NOW) {
 	global $db;
 	if(empty($db)) return false;
