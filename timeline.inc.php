@@ -11,8 +11,8 @@
 
 	// pagination
 	$current_page = (path(0) == 'page' && is_numeric(path(1))) ? (int) path(1) : 1;
-	$previous_page = ($current_page > 1) ? $current_page-1 : 1;
-	$next_page = $current_page + 1;
+	$posts_count = db_posts_count();
+	$total_pages = ceil($posts_count / $config['posts_per_page']);
 
 	// get posts
 	$posts = db_select_posts(NOW, $config['posts_per_page'], 'desc', $current_page);
@@ -50,8 +50,8 @@
 		<p>No posts found.</p>
 		<?php endif; ?>
 		<div class="pagination">
-			<a href="<?= $config['url'] ?>/page/<?= $previous_page ?>" class="previous<?= ($current_page == 1) ? ' disabled': '' ?>">newer updates</a>
-			<a href="<?= $config['url'] ?>/page/<?= $next_page ?>" class="next">older updates</a>
+			<?php if ($current_page > 1): ?><a href="<?= $config['url'] ?>/page/<?= $current_page - 1 ?>" class="previous">newer updates</a><?php endif; ?>
+			<?php if ($current_page < $total_pages): ?><a href="<?= $config['url'] ?>/page/<?= $current_page + 1 ?>" class="next">older updates</a><?php endif; ?>
 		</div>
 	</div>
 </body>
