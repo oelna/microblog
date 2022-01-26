@@ -22,7 +22,7 @@
 		if($id > 0) {
 			$message = array(
 				'status' => 'success',
-				'message' => 'Successfully postet status #'.$id
+				'message' => 'Successfully posted status #'.$id
 			);
 
 			rebuild_feed();
