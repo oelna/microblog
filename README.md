@@ -14,7 +14,7 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 ### Installation
 
 - Copy the files to a directory on your webserver
-- edit [config.php](config.php) and adjust the settings if you like (at least set a new password!)
+- copy (or rename) [config-dist.php](config-dist.php) to config.php and adjust the settings if you like (at least set a new password!)
 - for Apache: edit [.htaccess](.htaccess) and set `RewriteBase` to a path matching your installation directory
 - for nginx: have a rule similar to `try_files $uri $uri/ /index.php?$args;` for the microblog-location
 - optional: modify the theme file [microblog.css](microblog.css)
