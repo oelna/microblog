@@ -4,7 +4,8 @@
 	// check user credentials
 	if(isset($_COOKIE['microblog_login']) && $_COOKIE['microblog_login'] === sha1($config['url'].$config['admin_pass'])) {
 		// correct auth data, extend cookie life
-		setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life']);
+		$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+		setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
 	} else {
 		// wrong data, kick user to login page
 		header('HTTP/1.0 401 Unauthorized');
