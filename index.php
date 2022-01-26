@@ -1,7 +1,6 @@
 <?php
 	require_once(__DIR__.DIRECTORY_SEPARATOR.'config.php');
 
-
 	if(is_numeric(path(0))) {
 		// show a single blog post
 		require_once(ROOT.DS.'single.inc.php');
@@ -26,5 +25,3 @@
 		// show the homepage
 		require_once(ROOT.DS.'timeline.inc.php');
 	}
-
-?>
