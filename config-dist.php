@@ -51,3 +51,4 @@ try {
 
 // load functions
 require_once(ROOT.DS.'functions.php');
+require_once(ROOT.DS.'lib_autolink.php');
