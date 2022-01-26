@@ -19,7 +19,7 @@
 ?><!DOCTYPE html>
 <html lang="<?= $config['language'] ?>" class="timeline">
 <head>
-	<title>micro.blog</title>
+	<title><?= empty($config['microblog_account']) ? "" : $config['microblog_account'] . "'s "; ?>micro.blog</title>
 	<meta name="viewport" content="width=device-width" />
 	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed.json" />
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
