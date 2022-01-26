@@ -71,7 +71,6 @@ nav li + li a {
 	font-weight: bold;
 	float: left;
 }
-.timeline .pagination a.disabled { background-color: #b5b5af; }
 .timeline .pagination .next { float: right; }
 
 .wrap .post-timestamp {

@@ -62,6 +62,18 @@ function db_select_posts($from=NOW, $amount=10, $sort='desc', $page=1) {
 	return (!empty($rows)) ? $rows : false;
 }
 
+function db_posts_count() {
+	global $config;
+	global $db;
+	if(empty($db)) return false;
+
+	$statement = $db->prepare('SELECT COUNT(*) AS posts_count FROM posts');
+	$statement->execute();
+	$row = $statement->fetch(PDO::FETCH_ASSOC);
+
+	return (int) $row['posts_count'];
+}
+
 /* function that pings the official micro.blog endpoint for feed refreshes */
 function ping_microblog() {
 	global $config;
