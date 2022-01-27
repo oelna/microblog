@@ -1,9 +1,16 @@
 # this line may need to be removed on other hosts!
+<IfModule mod_fcgid.c>
 Action php-fcgid /fcgi-bin/php-fcgi-starter-7.0
+</IfModule>
 
 <Files ~ "\.db$">
+  <IfModule !mod_authz_core.c>
     Order allow,deny
     Deny from all
+  </IfModule>
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
 </Files>
 
 <IfModule mod_rewrite.c>
