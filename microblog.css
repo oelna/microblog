@@ -83,12 +83,12 @@ nav li + li a {
 	margin-bottom: 0.5rem;
 }
 
-.wrap .post-message {
+.wrap .post-content {
 	font-size: 1.25rem;
 	overflow-wrap: break-word;
 }
 
-.wrap .post-message a {
+.wrap .post-content a {
 	color: #007aff;
 	text-decoration: none;
 }
