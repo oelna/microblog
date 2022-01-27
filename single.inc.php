@@ -26,7 +26,7 @@
 			$formatted_time = strftime('%b %d %Y %H:%M', $post['post_timestamp']);
 		?>
 		<time class="post-timestamp" datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time>
-		<p class="post-message"><?= autolink($post['post_content']) ?></p>
+		<p class="post-message"><?= nl2br(autolink($post['post_content'])) ?></p>
 		<?php else: ?>
 		<p>No post with this ID.</p>
 		<?php endif; ?>
