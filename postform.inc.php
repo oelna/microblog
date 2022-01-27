@@ -67,7 +67,7 @@
 		document.addEventListener('DOMContentLoaded', function() {
 			var textarea = document.querySelector('textarea[name="message"]');
 			var charCount = document.querySelector('#count');
-			var maxCount = textarea.getAttribute('maxlength');
+			var maxCount = parseInt(textarea.getAttribute('maxlength'));
 
 			charCount.innerHTML = maxCount;
 
@@ -75,7 +75,7 @@
 				// todo: this should probably respect http://blog.jonnew.com/posts/poo-dot-length-equals-two
 				var textLength = this.value.length;
 
-				charCount.innerHTML = parseInt(textarea.getAttribute('maxlength')) - this.value.length;
+				charCount.innerHTML = maxCount - textLength;
 			}, false)
 		});
 	</script>
