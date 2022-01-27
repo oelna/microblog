@@ -1,4 +1,4 @@
-# this line may need to be removed on other hosts!
+# this line may need to be modified on other hosts!
 <IfModule mod_fcgid.c>
 Action php-fcgid /fcgi-bin/php-fcgi-starter-7.0
 </IfModule>
@@ -20,7 +20,6 @@ RewriteBase /microblog
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*) index.php [L]
-
 </IfModule>
 
 
