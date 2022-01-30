@@ -72,8 +72,7 @@
 			charCount.innerHTML = maxCount;
 
 			textarea.addEventListener('input', function() {
-				// todo: this should probably respect http://blog.jonnew.com/posts/poo-dot-length-equals-two
-				var textLength = this.value.length;
+				var textLength = [...this.value].length;
 
 				charCount.innerHTML = maxCount - textLength;
 			}, false)
