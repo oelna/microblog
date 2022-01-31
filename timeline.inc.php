@@ -42,7 +42,7 @@
 					$formatted_time = strftime('%b %d %Y %H:%M', $post['post_timestamp']);
 				?>
 				<a  class="post-timestamp" href="<?= $config['url'] ?>/<?= $post['id'] ?>"><time datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time></a>
-				<p class="post-message"><?= nl2br(autolink($post['post_content'])) ?></p>
+				<p class="post-content"><?= nl2br(autolink($post['post_content'])) ?></p>
 			</li>
 			<?php endforeach; ?>
 		</ul>

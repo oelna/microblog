@@ -6,13 +6,13 @@ function path($fragment=null) {
 	return (!empty($config['path'][$fragment])) ? $config['path'][$fragment] : false;
 }
 
-function db_insert($message, $timestamp=NOW) {
+function db_insert($content, $timestamp=NOW) {
 	global $db;
 	if(empty($db)) return false;
 
 	$statement = $db->prepare('INSERT INTO posts (post_content, post_timestamp) VALUES (:post_content, :post_timestamp)');
 
-	$statement->bindParam(':post_content', $message, PDO::PARAM_STR);
+	$statement->bindParam(':post_content', $content, PDO::PARAM_STR);
 	$statement->bindParam(':post_timestamp', $timestamp, PDO::PARAM_INT);
 
 	$statement->execute();

@@ -16,9 +16,9 @@
 	header('Content-Type: text/html; charset=utf-8');
 
 	$message = array();
-	if(!empty($_POST['message'])) {
+	if(!empty($_POST['content'])) {
 
-		$id = db_insert($_POST['message'], NOW);
+		$id = db_insert($_POST['content'], NOW);
 
 		if($id > 0) {
 			$message = array(
@@ -29,7 +29,7 @@
 			rebuild_feed();
 			if($config['ping'] == true) ping_microblog();
 			if($config['crosspost_to_twitter'] == true) {
-				$twitter_response = json_decode(twitter_post_status($_POST['message']), true);
+				$twitter_response = json_decode(twitter_post_status($_POST['content']), true);
 
 				if(!empty($twitter_response['errors'])) {
 					$message['message'] .= ' (But crossposting to twitter failed!)';
@@ -57,7 +57,7 @@
 		<p class="message <?= $message['status'] ?>"><?= $message['message'] ?></p>
 		<?php endif; ?>
 		<form action="" method="post">
-			<textarea name="message" maxlength="<?= $config['max_characters'] ?>"></textarea>
+			<textarea name="content" maxlength="<?= $config['max_characters'] ?>"></textarea>
 			<p id="count"><?= $config['max_characters'] ?></p>
 			<input type="submit" name="" value="Post" />
 		</form>
@@ -65,7 +65,7 @@
 
 	<script>
 		document.addEventListener('DOMContentLoaded', function() {
-			var textarea = document.querySelector('textarea[name="message"]');
+			var textarea = document.querySelector('textarea[name="content"]');
 			var charCount = document.querySelector('#count');
 			var maxCount = parseInt(textarea.getAttribute('maxlength'));
 
