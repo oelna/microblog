@@ -30,6 +30,4 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 
 ### Support my work
 
-The app is provided for free, but if you'd like to support what I do, please consider tipping. It is greatly appreciated. Can't promise it'll buy you software support, but if you send a reasonable PR, I'm happy to accept improvements to the app.
-
-[Patreon](https://patreon.com/oelna) [Paypal](https://www.paypal.me/oelna) [Flattr](https://flattr.com/@oelna)
+The app is provided for free, but if you'd like to support what I do, please consider tipping or sponsoring – it is greatly appreciated. Can't promise it'll buy you software support, but if you send a reasonable PR, I'm happy to accept improvements to the app. Links are under GitHub's official sponsor button.
