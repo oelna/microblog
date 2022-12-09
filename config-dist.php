@@ -36,19 +36,7 @@ $config = array(
 	)
 );
 
-//connect or create the database and tables
-try {
-	$db = new PDO('sqlite:'.ROOT.DS.'posts.db');
-	$db->exec("CREATE TABLE IF NOT EXISTS posts (
-		id integer PRIMARY KEY NOT NULL,
-		post_content TEXT,
-		post_timestamp integer(128)
-	);");
-} catch(PDOException $e) {
-	print 'Exception : '.$e->getMessage();
-	die('cannot connect to or open the database');
-}
-
 // load functions
+require_once(ROOT.DS.'database.php');
 require_once(ROOT.DS.'functions.php');
 require_once(ROOT.DS.'lib_autolink.php');

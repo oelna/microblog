@@ -4,11 +4,11 @@ A very simple PHP app that stores twitter-like status updates in a sqlite databa
 
 ![a screenshot of the microblog app](https://user-images.githubusercontent.com/1279725/34184164-9567a4b2-e51e-11e7-9317-d737ef3423f0.png)
 
-There is a timeline view of your own posts, as well as a simple 'compose post' page behind a login form. Right now, only a unique ID, the post content and creation timestamp are saved for each entry, so this is only suitable for one user. (Multiple users would each have to install in their own directories.)
+There is a timeline view of your own posts, as well as a simple 'compose post' page behind a login form. Right now, only a unique ID, the post content and creation timestamp, edit time and delete status are saved for each entry, so this is only suitable for one user. (Multiple users would each have to install in their own directories.)
 
 The entire design is inside a single theme file [microblog.css](microblog.css) and can be modified easily. The site HTML is pretty straightforward and should be easy to style.
 
-The app requires at least PHP 5.5 and was tested on 7.0. It needs mbstring, curl and sqlite modules. 
+The app requires at least PHP 5.5 and was tested on 8.1. It needs mbstring, curl and sqlite modules. 
 For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](https://github.com/J7mbo/twitter-api-php)
 
 ### Installation
@@ -23,7 +23,6 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 ### To Do
 
 - add a regular RSS or ATOM feed in addition to the JSON feed, for versatility and integration with other services and readers
-- make interface adjustments to be able to delete status posts
 - test whether the [ping function](http://help.micro.blog/2017/api-feeds/) actually works
 - improve html rendering
 - maybe improve theming support by adding a themes dir, moving the CSS there and setting theme via config file

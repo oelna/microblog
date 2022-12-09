@@ -11,13 +11,48 @@ function db_insert($content, $timestamp=NOW) {
 	if(empty($db)) return false;
 
 	$statement = $db->prepare('INSERT INTO posts (post_content, post_timestamp) VALUES (:post_content, :post_timestamp)');
-
-	$statement->bindParam(':post_content', $content, PDO::PARAM_STR);
-	$statement->bindParam(':post_timestamp', $timestamp, PDO::PARAM_INT);
+	$statement->bindValue(':post_content', $content, PDO::PARAM_STR);
+	$statement->bindValue(':post_timestamp', $timestamp, PDO::PARAM_INT);
 
 	$statement->execute();
 
 	return $db->lastInsertId();
+}
+
+function db_delete($post_id) {
+	global $db;
+	if(empty($db)) return false;
+	if(!is_numeric($post_id) || $post_id <= 0) return false;
+
+	/*
+	$statement = $db->prepare('DELETE FROM posts WHERE id = :id');
+	$statement->bindParam(':id', $post_id, PDO::PARAM_INT);
+	*/
+
+	// mark as deleted instead (for undo?!)
+	$statement = $db->prepare('UPDATE posts SET post_deleted = :post_deleted WHERE id = :id');
+	$statement->bindValue(':id', $post_id, PDO::PARAM_INT);
+	$statement->bindValue(':post_deleted', time(), PDO::PARAM_INT);
+
+	$statement->execute();
+
+	return $statement->rowCount();
+}
+
+function db_update($post_id, $content) {
+	global $db;
+	if(empty($db)) return false;
+	if(empty($content)) return false;
+	if(!is_numeric($post_id) || $post_id <= 0) return false;
+
+	$statement = $db->prepare('UPDATE posts SET post_content = :post_content, post_edited = :post_edited WHERE id = :id');
+	$statement->bindValue(':id', $post_id, PDO::PARAM_INT);
+	$statement->bindValue(':post_content', $content, PDO::PARAM_STR);
+	$statement->bindValue(':post_edited', time(), PDO::PARAM_INT);
+
+	$statement->execute();
+
+	return $statement->rowCount();
 }
 
 function db_select_post($id=0) {
@@ -26,7 +61,7 @@ function db_select_post($id=0) {
 	if($id === 0) return false;
 
 	$statement = $db->prepare('SELECT * FROM posts WHERE id = :id LIMIT 1');
-	$statement->bindParam(':id', $id, PDO::PARAM_INT);
+	$statement->bindValue(':id', $id, PDO::PARAM_INT);
 	$statement->execute();
 	$row = $statement->fetch(PDO::FETCH_ASSOC);
 
@@ -41,10 +76,10 @@ function db_select_posts($from=NOW, $amount=10, $sort='desc', $page=1) {
 
 	$offset = ($page-1)*$config['posts_per_page'];
 
-	$statement = $db->prepare('SELECT * FROM posts WHERE post_timestamp < :post_timestamp ORDER BY id '.$sort.' LIMIT :limit OFFSET :page');
-	$statement->bindParam(':post_timestamp', $from, PDO::PARAM_INT);
-	$statement->bindParam(':limit', $amount, PDO::PARAM_INT);
-	$statement->bindParam(':page', $offset, PDO::PARAM_INT);
+	$statement = $db->prepare('SELECT * FROM posts WHERE post_timestamp < :post_timestamp AND post_deleted IS NULL ORDER BY id '.$sort.' LIMIT :limit OFFSET :page');
+	$statement->bindValue(':post_timestamp', $from, PDO::PARAM_INT);
+	$statement->bindValue(':limit', $amount, PDO::PARAM_INT);
+	$statement->bindValue(':page', $offset, PDO::PARAM_INT);
 	$statement->execute();
 	$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
 

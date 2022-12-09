@@ -35,6 +35,9 @@
 					$message['message'] .= ' (But crossposting to twitter failed!)';
 				}
 			}
+
+			header('Location: '.$config['url'].'/'.$id);
+			die();
 		}
 	}
 
@@ -44,13 +47,14 @@
 	<title>micro.blog</title>
 	<meta name="viewport" content="width=device-width" />
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
+	<script src="<?= $config['url'] ?>/microblog.js" type="module" defer></script>
 </head>
 <body>
 	<div class="wrap">
-		<nav>
+		<nav class="main">
 			<ul>
-				<li><a href="<?= $config['url'] ?>/">Timeline</a></li>
-				<li><a href="<?= $config['url'] ?>/new">New Status</a></li>
+				<li><a class="button" href="<?= $config['url'] ?>/">Timeline</a></li>
+				<li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li>
 			</ul>
 		</nav>
 		<?php if(isset($message['status']) && isset($message['message'])): ?>
@@ -62,21 +66,5 @@
 			<input type="submit" name="" value="Post" />
 		</form>
 	</div>
-
-	<script>
-		document.addEventListener('DOMContentLoaded', function() {
-			var textarea = document.querySelector('textarea[name="content"]');
-			var charCount = document.querySelector('#count');
-			var maxCount = parseInt(textarea.getAttribute('maxlength'));
-
-			charCount.innerHTML = maxCount;
-
-			textarea.addEventListener('input', function() {
-				var textLength = [...this.value].length;
-
-				charCount.innerHTML = maxCount - textLength;
-			}, false)
-		});
-	</script>
 </body>
 </html>

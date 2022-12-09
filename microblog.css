@@ -7,7 +7,7 @@
 }
 
 html {
-	font: 100%/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, sans-serif;
+	font: 100%/1.4 system-ui, Helvetica, sans-serif;
 	background-color: #b5b5af;
 	color: #080f15;
 }
@@ -21,18 +21,7 @@ html {
 	box-shadow: 0 1.25rem 1rem -1rem rgba(0,0,0,0.25);
 }
 
-nav ul {
-	display: flex;
-	justify-content: center;
-	margin-bottom: 2rem;
-}
-
-nav li {
-	list-style: none;
-	width: 50%;
-}
-
-nav li a {
+.button {
 	display: block;
 	background: #007aff;
 	color: #fffceb;
@@ -43,18 +32,47 @@ nav li a {
 	text-align: center;
 }
 
-nav li + li a {
+.button.alert {
+	background: coral;
+}
+
+nav.main ul {
+	display: flex;
+	margin-bottom: 2rem;
+}
+
+nav.main li {
+	list-style: none;
+	flex: 1;
+}
+
+nav.main li a {
+	/* inherits from .button */
+}
+
+nav.main li + li a {
 	margin-left: 0.2rem;
 }
 
-.timeline .wrap > ul li {
+.wrap .posts {
+
+}
+
+.wrap .posts > li {
 	list-style: none;
 	margin-bottom: 1rem;
 	border-bottom: 1px solid rgba(0,0,0,0.1);
 	padding-bottom: 1rem;
+
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
 }
 
-.timeline .wrap > ul li:last-child {
+.wrap .posts > li > * {
+	outline: 0px solid #f0f;
+}
+
+.wrap .posts > li:last-child {
 	margin-bottom: 2rem;
 	border-bottom: 0;
 	padding-bottom: 0;
@@ -81,11 +99,41 @@ nav li + li a {
 	text-transform: uppercase;
 	font-weight: bold;
 	margin-bottom: 0.5rem;
+	grid-column-start: span 3;
+}
+
+.wrap .post-meta {
+	grid-column-start: span 3;
+}
+
+.wrap .post-meta ul {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75ch;
+}
+
+.wrap .post-meta li {
+	list-style: none;
+}
+
+.wrap .post-meta li a {
+	display: block;
+	color: #ccc;
+	text-decoration: none;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.wrap .post-meta li a:is(:hover, :focus) {
+	color: currentColor;
 }
 
 .wrap .post-content {
 	font-size: 1.25rem;
 	overflow-wrap: break-word;
+	grid-column-start: span 6;
 }
 
 .wrap .post-content a {
@@ -93,12 +141,33 @@ nav li + li a {
 	text-decoration: none;
 }
 
+.wrap form.delete {
+	width: 100%;
+	grid-column-start: span 6;
+	display: flex;
+	margin-block-start: 2rem;
+}
+
+.wrap form.delete input[type="submit"] {
+	flex: 1;
+	line-height: 1.4;
+	cursor: pointer;
+}
+
+.wrap .posts li .message {
+	width: 100%;
+	grid-column-start: span 6;
+	margin-block-start: 2rem;
+}
+
 .postform form,
+form.edit,
 .login form {
+	grid-column-start: span 6;
 	overflow: hidden;
 }
 
-.postform textarea {
+:is(.postform, .edit) textarea {
 	width: 100%;
 	border: 2px solid #b5b5af;
 	padding: 0.5rem;
@@ -108,12 +177,12 @@ nav li + li a {
 	margin-bottom: 0.5rem;
 }
 
-.postform textarea:focus {
+:is(.postform, .edit) textarea:focus {
 	border-color: #007aff;
 	outline: none;
 }
 
-.postform input[type="submit"],
+:is(.postform, .edit) input[type="submit"],
 .login input[type="submit"] {
 	-webkit-appearance: none;
 	appearance: none;
@@ -130,12 +199,12 @@ nav li + li a {
 	float: right;
 }
 
-.postform #count {
+:is(.postform, .edit) #count {
 	float: left;
 	color: #b5b5af;
 }
 
-.postform .message,
+:is(.postform, .edit) .message,
 .login .message {
 	background-color: #87b26c;
 	padding: 0.5rem;
@@ -144,7 +213,7 @@ nav li + li a {
 	margin-bottom: 0.5rem;
 }
 
-.postform .error,
+:is(.postform, .edit) .error,
 .login .error {
 	background-color: #9c2128;
 }
