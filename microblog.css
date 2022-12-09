@@ -13,8 +13,7 @@ html {
 }
 
 .wrap {
-	width: 95%;
-	max-width: 40rem;
+	width: min(95%, 40rem);
 	margin: 2rem auto;
 	padding: 1rem;
 	background-color: #fffceb;
@@ -118,7 +117,8 @@ nav.main li + li a {
 
 .wrap .post-meta li a {
 	display: block;
-	color: #ccc;
+	color: hsla(0, 0%, 0%, 0.2);
+	mix-blend-mode: multiply;
 	text-decoration: none;
 	font-size: 0.8rem;
 	text-transform: uppercase;
@@ -232,4 +232,25 @@ form.edit,
 .login input[type="password"]:focus {
 	border-color: #007aff;
 	outline: none;
+}
+
+footer {
+	width: min(95%, 40rem);
+	margin: 0.5rem auto 2rem;
+}
+
+footer ul {
+	list-style: none;
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
+}
+
+footer li a {
+	color: hsla(0, 0%, 0%, 0.3);
+	text-decoration: none;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
 }

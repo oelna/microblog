@@ -44,5 +44,13 @@
 			<input type="submit" name="" value="Login" />
 		</form>
 	</div>
+	<footer>
+		<nav>
+			<ul>
+				<li><a href="<?= $config['url'] ?>/feed/feed.xml">ATOM Feed</a></li>
+				<li><a href="<?= $config['url'] ?>/feed/feed.json">JSON Feed</a></li>
+			</ul>
+		</nav>
+	</footer>
 </body>
 </html>

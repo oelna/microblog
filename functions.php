@@ -10,9 +10,10 @@ function db_insert($content, $timestamp=NOW) {
 	global $db;
 	if(empty($db)) return false;
 
-	$statement = $db->prepare('INSERT INTO posts (post_content, post_timestamp) VALUES (:post_content, :post_timestamp)');
+	$statement = $db->prepare('INSERT INTO posts (post_content, post_timestamp, post_guid) VALUES (:post_content, :post_timestamp, :post_guid)');
 	$statement->bindValue(':post_content', $content, PDO::PARAM_STR);
 	$statement->bindValue(':post_timestamp', $timestamp, PDO::PARAM_INT);
+	$statement->bindValue(':post_guid', uuidv4(), PDO::PARAM_STR);
 
 	$statement->execute();
 
@@ -119,43 +120,98 @@ function ping_microblog() {
 	return ($status == 200) ? true : false;
 }
 
-function rebuild_feed($amount=10) {
+function rebuild_feeds($amount=10) {
+
+	$posts = db_select_posts(NOW+60, $amount, 'desc');
+
+	rebuild_json_feed($posts);
+	rebuild_atom_feed($posts);
+}
+
+function rebuild_json_feed($posts=[]) {
 	global $config;
+
+	if (!file_exists(ROOT.DS.'feed')) {
+		mkdir(ROOT.DS.'feed', 0755);
+	}
+
+	$filename = ROOT.DS.'feed'.DS.'feed.json';
 
 	$feed = array(
 		'version' => 'https://jsonfeed.org/version/1',
 		'title' => 'status updates by '.$config['microblog_account'],
 		'description' => '',
 		'home_page_url' => $config['url'],
-		'feed_url' => $config['url'].'/feed.json',
+		'feed_url' => $config['url'].'/feed/feed.json',
 		'user_comment' => '',
 		'favicon' => '',
 		'author' => array('name' => $config['microblog_account']),
 		'items' => array()
 	);
 
-	// make a timezone string for dates
-	$timezone_offset_string = '+00:00'; // because unix timestamps are always GMT?
-
-	$posts = db_select_posts(NOW+60, $amount, 'desc');
-
 	foreach($posts as $post) {
 
-		$date = date_create();
-		date_timestamp_set($date, $post['post_timestamp']);
-
 		$feed['items'][] = array(
-			'id' => $config['url'].'/'.$post['id'],
+			'id' => ($post['post_guid'] ? 'urn:uuid:'.$post['post_guid'] : $config['url'].'/'.$post['id']),
 			'url' => $config['url'].'/'.$post['id'],
 			'title' => '',
 			'content_html' => $post['post_content'],
-			'date_published' => date_format($date, 'Y-m-d\TH:i:s').$timezone_offset_string
+			'date_published' => gmdate('Y-m-d\TH:i:s\Z', $post['post_timestamp'])
 		);
 	}
 
-	if(file_put_contents(ROOT.DS.'feed.json', json_encode($feed, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {
+	if(file_put_contents($filename, json_encode($feed, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {
 		return true;
 	} else return false;
+}
+
+function rebuild_atom_feed($posts=[]) {
+	global $config;
+
+	if (!file_exists(ROOT.DS.'feed')) {
+		mkdir(ROOT.DS.'feed', 0755);
+	}
+
+	$filename = ROOT.DS.'feed'.DS.'feed.xml';
+
+	$feed  = '<?xml version="1.0" encoding="UTF-8" ?'.'>'.NL;
+	$feed .= '<feed xmlns="http://www.w3.org/2005/Atom">'.NL;
+	$feed .= '<author><name>'.$config['microblog_account'].'</name></author>'.NL;
+	$feed .= '<title>status updates by '.$config['microblog_account'].'</title>'.NL;
+	$feed .= '<id>'.$config['url'].'</id>'.NL;
+	$feed .= '<updated>'.gmdate('Y-m-d\TH:i:s\Z').'</updated>'.NL;
+
+	foreach($posts as $post) {
+
+		$published = gmdate('Y-m-d\TH:i:s\Z', $post['post_timestamp']);
+		$updated = ($post['post_edited'] > $post['post_timestamp']) ? gmdate('Y-m-d\TH:i:s\Z', $post['post_edited']) : $published;
+
+		$feed .= '<entry>'.NL;
+		$feed .= '<title type="text">'.date('Y-m-d H:i', $post['post_timestamp']).'</title>'.NL;
+		$feed .= '<link rel="alternate" type="text/html" href="'.$config['url'].'/'.$post['id'].'" />'.NL;
+		$feed .= '<id>'.($post['post_guid'] ? 'urn:uuid:'.$post['post_guid'] : $config['url'].'/'.$post['id']).'</id>'.NL;
+		$feed .= '<updated>'.$updated.'</updated>'.NL;
+		$feed .= '<published>'.$published.'</published>'.NL;
+		$feed .= '<content type="text">'.$post['post_content'].'</content>'.NL;
+		$feed .= '</entry>'.NL;
+	}
+
+	$feed .= '</feed>';
+
+	if(file_put_contents($filename, $feed)) {
+		return true;
+	} else return false;
+}
+
+function uuidv4($data = null) { // https://stackoverflow.com/a/15875555/3625228
+
+	$data = $data ?? openssl_random_pseudo_bytes(16);
+	assert(strlen($data) == 16);
+
+	$data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
+	$data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
+
+	return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
 function twitter_post_status($status='') {

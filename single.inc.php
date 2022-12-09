@@ -16,6 +16,8 @@
 		if(!$result) {
 			$error = 'Post could not be deleted!';
 		} else {
+			rebuild_feeds();
+
 			header('Location: '.$config['url']);
 			die();
 		}
@@ -28,6 +30,8 @@
 		if(!$result) {
 			$error = 'Post could not be updated!';
 		} else {
+			rebuild_feeds();
+
 			header('Location: '.$config['url'].'/'.$_POST['id']);
 			die();
 		}
@@ -41,6 +45,8 @@
 <head>
 	<title><?= empty($config['microblog_account']) ? "" : $config['microblog_account'] . "'s " ?>micro.blog - entry #<?= $id ?></title>
 	<meta name="viewport" content="width=device-width" />
+	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed/feed.json" />
+	<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="<?= $config['url'] ?>/feed/feed.xml" />
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
 	<script src="<?= $config['url'] ?>/microblog.js" type="module" defer></script>
 </head>
@@ -97,5 +103,13 @@
 		<?php endif; ?>
 		</ul>
 	</div>
+	<footer>
+		<nav>
+			<ul>
+				<li><a href="<?= $config['url'] ?>/feed/feed.xml">ATOM Feed</a></li>
+				<li><a href="<?= $config['url'] ?>/feed/feed.json">JSON Feed</a></li>
+			</ul>
+		</nav>
+	</footer>
 </body>
 </html>

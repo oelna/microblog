@@ -8,6 +8,8 @@ There is a timeline view of your own posts, as well as a simple 'compose post' p
 
 The entire design is inside a single theme file [microblog.css](microblog.css) and can be modified easily. The site HTML is pretty straightforward and should be easy to style.
 
+ATOM and JSON feeds are provided and rendered as static files when posting.
+
 The app requires at least PHP 5.5 and was tested on 8.1. It needs mbstring, curl and sqlite modules. 
 For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](https://github.com/J7mbo/twitter-api-php)
 
@@ -22,10 +24,10 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 
 ### To Do
 
-- add a regular RSS or ATOM feed in addition to the JSON feed, for versatility and integration with other services and readers
 - test whether the [ping function](http://help.micro.blog/2017/api-feeds/) actually works
 - improve html rendering
 - maybe improve theming support by adding a themes dir, moving the CSS there and setting theme via config file
+- see issues
 
 ### Support my work
 

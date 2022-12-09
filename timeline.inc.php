@@ -22,8 +22,10 @@
 <head>
 	<title><?= empty($config['microblog_account']) ? "" : $config['microblog_account'] . "'s "; ?>micro.blog</title>
 	<meta name="viewport" content="width=device-width" />
-	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed.json" />
+	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed/feed.json" />
+	<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="<?= $config['url'] ?>/feed/feed.xml" />
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
+	<script src="<?= $config['url'] ?>/microblog.js" type="module" defer></script>
 </head>
 <body>
 	<div class="wrap">
@@ -63,5 +65,13 @@
 			<?php if ($current_page < $total_pages): ?><a href="<?= $config['url'] ?>/page/<?= $current_page + 1 ?>" class="next">older updates</a><?php endif; ?>
 		</div>
 	</div>
+	<footer>
+		<nav>
+			<ul>
+				<li><a href="<?= $config['url'] ?>/feed/feed.xml">ATOM Feed</a></li>
+				<li><a href="<?= $config['url'] ?>/feed/feed.json">JSON Feed</a></li>
+			</ul>
+		</nav>
+	</footer>
 </body>
 </html>

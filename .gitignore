@@ -1,3 +1,4 @@
 *.db
 config.php
-feed.json
+feed.*
+feeds/

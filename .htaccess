@@ -1,7 +1,8 @@
-# this line may need to be modified on other hosts!
-<IfModule mod_fcgid.c>
-Action php-fcgid /fcgi-bin/php-fcgi-starter-7.0
-</IfModule>
+AddCharset UTF-8 .xml
+AddCharset UTF-8 .json
+
+AddType application/atom+xml .xml
+AddType application/json .json
 
 <Files ~ "\.db$">
   <IfModule !mod_authz_core.c>

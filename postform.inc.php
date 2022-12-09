@@ -26,7 +26,7 @@
 				'message' => 'Successfully posted status #'.$id
 			);
 
-			rebuild_feed();
+			rebuild_feeds();
 			if($config['ping'] == true) ping_microblog();
 			if($config['crosspost_to_twitter'] == true) {
 				$twitter_response = json_decode(twitter_post_status($_POST['content']), true);
@@ -36,7 +36,7 @@
 				}
 			}
 
-			header('Location: '.$config['url'].'/'.$id);
+			header('Location: '.$config['url']);
 			die();
 		}
 	}
@@ -66,5 +66,13 @@
 			<input type="submit" name="" value="Post" />
 		</form>
 	</div>
+	<footer>
+		<nav>
+			<ul>
+				<li><a href="<?= $config['url'] ?>/feed/feed.xml">ATOM Feed</a></li>
+				<li><a href="<?= $config['url'] ?>/feed/feed.json">JSON Feed</a></li>
+			</ul>
+		</nav>
+	</footer>
 </body>
 </html>
