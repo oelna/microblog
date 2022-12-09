@@ -99,20 +99,22 @@ function rebuild_feed($amount=10) {
 		'items' => array()
 	);
 
-	// make a timezone string for dates (is this dumb?)
-	$timezone_offset = timezone_offset_get(timezone_open('UTC'), new DateTime())/60/60; // this is probably incorrect
-	$timezone_offset_string = (is_int($timezone_offset) && $timezone_offset >= 0) ? '+'.str_pad($timezone_offset, 2, '0', STR_PAD_LEFT).':00' : '-'.str_pad($timezone_offset, 2, '0', STR_PAD_LEFT).':00';
+	// make a timezone string for dates
+	$timezone_offset_string = '+00:00'; // because unix timestamps are always GMT?
 
 	$posts = db_select_posts(NOW+60, $amount, 'desc');
 
 	foreach($posts as $post) {
+
+		$date = date_create();
+		date_timestamp_set($date, $post['post_timestamp']);
 
 		$feed['items'][] = array(
 			'id' => $config['url'].'/'.$post['id'],
 			'url' => $config['url'].'/'.$post['id'],
 			'title' => '',
 			'content_html' => $post['post_content'],
-			'date_published' => strftime('%Y-%m-%dT%H:%M:%S', $post['post_timestamp']).$timezone_offset_string
+			'date_published' => date_format($date, 'Y-m-d\TH:i:s').$timezone_offset_string
 		);
 	}
 

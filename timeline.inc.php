@@ -38,8 +38,11 @@
 			<?php foreach($posts as $post): ?>
 			<li data-post-id="<?= $post['id'] ?>">
 				<?php
-					$datetime = strftime('%Y-%m-%d %H:%M:%S', $post['post_timestamp']);
-					$formatted_time = strftime('%b %d %Y %H:%M', $post['post_timestamp']);
+					$date = date_create();
+					date_timestamp_set($date, $post['post_timestamp']);
+					
+					$datetime = date_format($date, 'Y-m-d H:i:s');
+					$formatted_time = date_format($date, 'M d Y H:i');
 				?>
 				<a  class="post-timestamp" href="<?= $config['url'] ?>/<?= $post['id'] ?>"><time datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time></a>
 				<p class="post-content"><?= nl2br(autolink($post['post_content'])) ?></p>
