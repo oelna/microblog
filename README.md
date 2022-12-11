@@ -1,6 +1,6 @@
 # Simple Microblog
 
-A very simple PHP app that stores twitter-like status updates in a sqlite database. It also generates a JSON feed, that can be used as a source for the [micro.blog](https://micro.blog/) service. It is aimed at people who would like to host their own micro.blog, but want to avoid using Wordpress for it.
+A simple PHP app that stores Twitter-like status updates in a sqlite database. It also generates a JSON feed, that can be used as a source for the [micro.blog](https://micro.blog/) service. It is aimed at people who would like to host their own micro.blog, but want to avoid using Wordpress for it.
 
 ![a screenshot of the microblog app](https://user-images.githubusercontent.com/1279725/34184164-9567a4b2-e51e-11e7-9317-d737ef3423f0.png)
 
@@ -9,6 +9,8 @@ There is a timeline view of your own posts, as well as a simple 'compose post' p
 The entire design is inside a single theme file [microblog.css](microblog.css) and can be modified easily. The site HTML is pretty straightforward and should be easy to style.
 
 ATOM and JSON feeds are provided and rendered as static files when posting.
+
+If the PHP version on the server supports it, an XML-RPC interface is provided to enable posting from external apps, such as [Marsedit](https://redsweater.com/marsedit/). Please set an `app_token` in the config as secret to use with your username. If you don't set one, you have to use your login password to authenticate.
 
 The app requires at least PHP 5.5 and was tested on 8.1. It needs mbstring, curl and sqlite modules. 
 For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](https://github.com/J7mbo/twitter-api-php)
@@ -21,11 +23,12 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 - for nginx: have a rule similar to `try_files $uri $uri/ /index.php?$args;` for the microblog-location
 - optional: modify the theme file [microblog.css](microblog.css)
 - optional: enable crossposting to twitter by filling in app credentials in [config.php](config.php#L32-L35) (instructions there)
+- optional: set an `app_token` to use with XML-RPC
 
 ### To Do
 
 - test whether the [ping function](http://help.micro.blog/2017/api-feeds/) actually works
-- improve html rendering
+- improve html rendering (?)
 - maybe improve theming support by adding a themes dir, moving the CSS there and setting theme via config file
 - see issues
 
