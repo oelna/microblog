@@ -71,6 +71,7 @@
 			<ul>
 				<li><a href="<?= $config['url'] ?>/feed/feed.xml">ATOM Feed</a></li>
 				<li><a href="<?= $config['url'] ?>/feed/feed.json">JSON Feed</a></li>
+				<?php if($config['xmlrpc']): ?><li><a href="<?= $config['url'] ?>/xmlrpc.php">XML-RPC</a></li><?php endif; ?>
 			</ul>
 		</nav>
 	</footer>

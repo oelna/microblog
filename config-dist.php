@@ -25,6 +25,7 @@ $config = array(
 	'microblog_account' => '', // fill in a @username if you like
 	'admin_user' => 'admin',
 	'admin_pass' => 'dove-life-bird-lust',
+	'app_token' => '3e83b13d99bf0de6c6bde5ac5ca4ae687a3d46db', // random secret used as auth with XMLRPC
 	'cookie_life' => 60*60*24*7*4, // cookie life in seconds
 	'ping' => true, // enable automatic pinging of the micro.blog service
 	'crosspost_to_twitter' => false, // set this to true to automatically crosspost to a twitter account (requires app credentials, see below)
@@ -35,6 +36,9 @@ $config = array(
 		'consumer_secret' => ''
 	)
 );
+
+$config['xmlrpc'] = function_exists('xmlrpc_server_create');
+$config['local_time_offset'] = date('P');
 
 // load functions
 require_once(ROOT.DS.'database.php');

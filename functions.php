@@ -40,13 +40,18 @@ function db_delete($post_id) {
 	return $statement->rowCount();
 }
 
-function db_update($post_id, $content) {
+function db_update($post_id, $content, $timestamp=null) {
 	global $db;
 	if(empty($db)) return false;
 	if(empty($content)) return false;
 	if(!is_numeric($post_id) || $post_id <= 0) return false;
 
-	$statement = $db->prepare('UPDATE posts SET post_content = :post_content, post_edited = :post_edited WHERE id = :id');
+	if($timestamp !== null) {
+		$statement = $db->prepare('UPDATE posts SET post_content = :post_content, post_edited = :post_edited, post_timestamp = :post_timestamp WHERE id = :id');
+		$statement->bindValue(':post_timestamp', $timestamp, PDO::PARAM_INT);
+	} else {
+		$statement = $db->prepare('UPDATE posts SET post_content = :post_content, post_edited = :post_edited WHERE id = :id');
+	}
 	$statement->bindValue(':id', $post_id, PDO::PARAM_INT);
 	$statement->bindValue(':post_content', $content, PDO::PARAM_STR);
 	$statement->bindValue(':post_edited', time(), PDO::PARAM_INT);
@@ -77,7 +82,7 @@ function db_select_posts($from=NOW, $amount=10, $sort='desc', $page=1) {
 
 	$offset = ($page-1)*$config['posts_per_page'];
 
-	$statement = $db->prepare('SELECT * FROM posts WHERE post_timestamp < :post_timestamp AND post_deleted IS NULL ORDER BY id '.$sort.' LIMIT :limit OFFSET :page');
+	$statement = $db->prepare('SELECT * FROM posts WHERE post_timestamp < :post_timestamp AND post_deleted IS NULL ORDER BY post_timestamp '.$sort.' LIMIT :limit OFFSET :page');
 	$statement->bindValue(':post_timestamp', $from, PDO::PARAM_INT);
 	$statement->bindValue(':limit', $amount, PDO::PARAM_INT);
 	$statement->bindValue(':page', $offset, PDO::PARAM_INT);
