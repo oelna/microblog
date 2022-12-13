@@ -103,6 +103,12 @@ nav.main li + li a {
 	grid-column-start: span 3;
 }
 
+.wrap .post-timestamp time.modified {
+	display: block;
+	color: hsla(0, 0%, 0%, 0.2);
+	mix-blend-mode: multiply;
+}
+
 .wrap .post-meta {
 	grid-column-start: span 3;
 }

@@ -86,7 +86,12 @@
 					$datetime = date_format($date, 'Y-m-d H:i:s');
 					$formatted_time = date_format($date, 'M d Y H:i');
 				?>
-				<span class="post-timestamp"><time datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time></span>
+				<span class="post-timestamp">
+					<time class="published" datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time>
+					<?php if(is_numeric($post['post_edited']) && $config['show_edits']): ?>
+					<time class="modified" datetime="<?= gmdate('Y-m-d\TH:i:s\Z', $post['post_edited']) ?>" data-unix-time="<?= $post['post_edited'] ?>">Edited on <?= date('M d Y H:i', $post['post_edited']) ?></time>
+					<?php endif; ?>
+				</span>
 				<nav class="post-meta">
 					<?php if($config['logged_in']): ?><ul>
 						<?php if(is_numeric($post['post_deleted'])): ?>

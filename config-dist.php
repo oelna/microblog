@@ -34,7 +34,8 @@ $config = array(
 		'oauth_access_token_secret' => '',
 		'consumer_key' => '',
 		'consumer_secret' => ''
-	)
+	),
+	'show_edits' => true, // displays the modification time of posts
 );
 
 $config['xmlrpc'] = function_exists('xmlrpc_server_create');

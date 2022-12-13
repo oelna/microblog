@@ -4,6 +4,8 @@
 	// check user credentials
 	$config['logged_in'] = check_login();
 
+	$config['show_edits'] = !empty($config['show_edits']) ? $config['show_edits'] : true;
+
 	// subpages
 	$template = 'timeline';
 	if(is_numeric(path(0))) {
