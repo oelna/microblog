@@ -7,8 +7,8 @@ if(!function_exists('xmlrpc_server_create')) { exit('No XML-RPC support detected
 if(empty($request_xml)) { exit('XML-RPC server accepts POST requests only.'); }
 
 // load config
-require_once(__DIR__.DIRECTORY_SEPARATOR.'config.php');
-$logfile = __DIR__.DS.'log.txt';
+require_once(__DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config.php');
+$logfile = ROOT.DS.'log.txt';
 
 if(!function_exists('str_starts_with')) {
 	function str_starts_with($haystack, $needle) {
@@ -423,6 +423,6 @@ $response = xmlrpc_server_call_method($server, $request_xml, null, [
 
 if($response) {
 	header('Content-Type: text/xml; charset=utf-8');
-	// error_log($request_xml."\n\n".$response."\n\n", 3, $logfile);
+	error_log($request_xml."\n\n".$response."\n\n", 3, $logfile);
 	echo($response);
 }
