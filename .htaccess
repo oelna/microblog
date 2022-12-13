@@ -18,6 +18,12 @@ AddType application/json .json
 RewriteEngine On
 RewriteBase /microblog
 
+# friendly URLs
+RewriteRule ^rsd/?$ rsd.xml.php [L]
+RewriteRule ^xmlrpc/?(.*)$ xmlrpc.php?/$1 [L]
+RewriteRule ^feed/json/?$ feed/feed.json [L]
+RewriteRule ^feed/atom/?$ feed/feed.xml [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*) index.php [L]

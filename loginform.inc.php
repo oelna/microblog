@@ -23,8 +23,14 @@
 ?><!DOCTYPE html>
 <html lang="<?= $config['language'] ?>" class="login">
 <head>
-	<title>micro.blog</title>
+	<meta charset="utf-8" />
+	<title><?= empty($config['microblog_account']) ? "" : $config['microblog_account'] . "'s "; ?>micro.blog</title>
+	<meta name="viewport" content="width=device-width" />
+	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed/json" />
+	<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="<?= $config['url'] ?>/feed/atom" />
+	<?php if($config['xmlrpc']): ?><link rel="EditURI" type="application/rsd+xml" title="RSD" href="<?= $config['url'] ?>/rsd" /><?php endif; ?>
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
+	<script src="<?= $config['url'] ?>/microblog.js" type="module" defer></script>
 </head>
 <body>
 	<div class="wrap">
@@ -47,8 +53,9 @@
 	<footer>
 		<nav>
 			<ul>
-				<li><a href="<?= $config['url'] ?>/feed/feed.xml">ATOM Feed</a></li>
-				<li><a href="<?= $config['url'] ?>/feed/feed.json">JSON Feed</a></li>
+				<li><a href="<?= $config['url'] ?>/feed/atom">ATOM Feed</a></li>
+				<li><a href="<?= $config['url'] ?>/feed/json">JSON Feed</a></li>
+				<?php if($config['xmlrpc']): ?><li><a href="<?= $config['url'] ?>/xmlrpc">XML-RPC</a></li><?php endif; ?>
 			</ul>
 		</nav>
 	</footer>

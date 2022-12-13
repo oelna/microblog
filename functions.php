@@ -74,13 +74,11 @@ function db_select_post($id=0) {
 	return (!empty($row)) ? $row : false;
 }
 
-function db_select_posts($from=NOW, $amount=10, $sort='desc', $page=1) {
-	global $config;
+function db_select_posts($from, $amount=10, $sort='desc', $offset=0) {
 	global $db;
 	if(empty($db)) return false;
+	if(empty($from)) $from = time();
 	if($sort !== 'desc') $sort = 'asc';
-
-	$offset = ($page-1)*$config['posts_per_page'];
 
 	$statement = $db->prepare('SELECT * FROM posts WHERE post_timestamp < :post_timestamp AND post_deleted IS NULL ORDER BY post_timestamp '.$sort.' LIMIT :limit OFFSET :page');
 	$statement->bindValue(':post_timestamp', $from, PDO::PARAM_INT);

@@ -13,18 +13,20 @@
 	$current_page = (path(0) == 'page' && is_numeric(path(1))) ? (int) path(1) : 1;
 	$posts_count = db_posts_count();
 	$total_pages = ceil($posts_count / $config['posts_per_page']);
+	$offset = ($current_page-1)*$config['posts_per_page'];
 
 	// get posts
-	$posts = db_select_posts(NOW, $config['posts_per_page'], 'desc', $current_page);
+	$posts = db_select_posts(NOW, $config['posts_per_page'], 'desc', $offset);
 
 ?><!DOCTYPE html>
 <html lang="<?= $config['language'] ?>" class="timeline">
 <head>
+	<meta charset="utf-8" />
 	<title><?= empty($config['microblog_account']) ? "" : $config['microblog_account'] . "'s "; ?>micro.blog</title>
 	<meta name="viewport" content="width=device-width" />
-	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed/feed.json" />
-	<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="<?= $config['url'] ?>/feed/feed.xml" />
-	<?php if($config['xmlrpc']): ?><link rel="EditURI" type="application/rsd+xml" title="RSD" href="<?= $config['url'] ?>/rsd.xml.php" /><?php endif; ?>
+	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed/json" />
+	<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="<?= $config['url'] ?>/feed/atom" />
+	<?php if($config['xmlrpc']): ?><link rel="EditURI" type="application/rsd+xml" title="RSD" href="<?= $config['url'] ?>/rsd" /><?php endif; ?>
 	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
 	<script src="<?= $config['url'] ?>/microblog.js" type="module" defer></script>
 </head>
@@ -69,9 +71,9 @@
 	<footer>
 		<nav>
 			<ul>
-				<li><a href="<?= $config['url'] ?>/feed/feed.xml">ATOM Feed</a></li>
-				<li><a href="<?= $config['url'] ?>/feed/feed.json">JSON Feed</a></li>
-				<?php if($config['xmlrpc']): ?><li><a href="<?= $config['url'] ?>/xmlrpc.php">XML-RPC</a></li><?php endif; ?>
+				<li><a href="<?= $config['url'] ?>/feed/atom">ATOM Feed</a></li>
+				<li><a href="<?= $config['url'] ?>/feed/json">JSON Feed</a></li>
+				<?php if($config['xmlrpc']): ?><li><a href="<?= $config['url'] ?>/xmlrpc">XML-RPC</a></li><?php endif; ?>
 			</ul>
 		</nav>
 	</footer>

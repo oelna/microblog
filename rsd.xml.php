@@ -8,8 +8,8 @@
     <engineLink>https://github.com/oelna/microblog</engineLink>
     <homePageLink><?= $config['url'] ?></homePageLink>
     <apis>
-      <api name="MetaWeblog" blogID="1" preferred="true" apiLink="<?= $config['url'] ?>/xmlrpc.php"/>
-      <!--<api name="Micro.blog" blogID="1" preferred="false" apiLink="<?= $config['url'] ?>/xmlrpc.php"/>-->
+      <api name="Micro.blog" blogID="1" preferred="true" apiLink="<?= $config['url'] ?>/xmlrpc" />
+      <api name="MetaWeblog" blogID="1" preferred="false" apiLink="<?= $config['url'] ?>/xmlrpc" />
     </apis>
   </service>
 </rsd>

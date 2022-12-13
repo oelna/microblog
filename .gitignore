@@ -2,3 +2,4 @@
 config.php
 feed.*
 feeds/
+log.txt
