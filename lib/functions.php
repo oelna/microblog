@@ -40,7 +40,7 @@ function db_insert($content, $timestamp=NOW) {
 	return $db->lastInsertId();
 }
 
-function db_delete($post_id) {
+function db_delete($post_id, $undelete=false) {
 	global $db;
 	if(empty($db)) return false;
 	if(!is_numeric($post_id) || $post_id <= 0) return false;
@@ -50,10 +50,14 @@ function db_delete($post_id) {
 	$statement->bindParam(':id', $post_id, PDO::PARAM_INT);
 	*/
 
+	// delete or undelete/restore
+	$post_deleted = !$undelete ? time() : null;
+	$type = !$undelete ? PDO::PARAM_INT : PDO::PARAM_NULL;
+
 	// mark as deleted instead (for undo?!)
 	$statement = $db->prepare('UPDATE posts SET post_deleted = :post_deleted WHERE id = :id');
 	$statement->bindValue(':id', $post_id, PDO::PARAM_INT);
-	$statement->bindValue(':post_deleted', time(), PDO::PARAM_INT);
+	$statement->bindValue(':post_deleted', $post_deleted, $type);
 
 	$statement->execute();
 
@@ -115,7 +119,7 @@ function db_posts_count() {
 	global $db;
 	if(empty($db)) return false;
 
-	$statement = $db->prepare('SELECT COUNT(*) AS posts_count FROM posts');
+	$statement = $db->prepare('SELECT COUNT(*) AS posts_count FROM posts WHERE post_deleted IS NULL');
 	$statement->execute();
 	$row = $statement->fetch(PDO::FETCH_ASSOC);
 

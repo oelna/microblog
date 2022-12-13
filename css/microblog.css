@@ -225,6 +225,7 @@ form.edit,
 .login input[type="password"] {
 	width: 100%;
 	border: 2px solid var(--background-color);
+	background: #fff;
 	padding: 0.5rem;
 	font-size: 1.25rem;
 	resize: vertical;

@@ -3,6 +3,9 @@
 //connect or create the database
 try {
 	$db = new PDO('sqlite:'.ROOT.DS.'posts.db');
+	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+
 	$config['db_version'] = $db->query("PRAGMA user_version")->fetch(PDO::FETCH_ASSOC)['user_version'];
 } catch(PDOException $e) {
 	print 'Exception : '.$e->getMessage();

@@ -1,11 +1,11 @@
 <?php
 	if(!defined('ROOT')) die('Don\'t call this directly.');
-	header('Content-Type: text/html; charset=utf-8');
 
 	$id = (!empty(path(0))) ? (int) path(0) : 0;
 
 	$action = 'display';
 	if(mb_strtolower(path(1)) == 'delete') $action = 'delete';
+	if(mb_strtolower(path(1)) == 'undelete') $action = 'undelete';
 	if(mb_strtolower(path(1)) == 'edit') $action = 'edit';
 
 	$error = false;
@@ -22,6 +22,17 @@
 
 				header('Location: '.$config['url']);
 				die();
+			}
+		}
+
+		// undelete post
+		if($action == 'undelete') {
+			$result = db_delete((int) $id, true);
+
+			if(!$result) {
+				$error = 'Post could not be restored!';
+			} else {
+				rebuild_feeds();
 			}
 		}
 
@@ -43,6 +54,11 @@
 
 	// load the actual post
 	$post = db_select_post($id);
+	if(is_numeric($post['post_deleted'])) {
+		if(!$config['logged_in']) {
+			header('Location: '.$config['url']);
+		}
+	}
 
 	$title_suffix = 'entry #' . $id;
 	require(ROOT.DS.'snippets'.DS.'header.snippet.php');
@@ -73,8 +89,12 @@
 				<span class="post-timestamp"><time datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time></span>
 				<nav class="post-meta">
 					<?php if($config['logged_in']): ?><ul>
+						<?php if(is_numeric($post['post_deleted'])): ?>
+						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/undelete" title="Restore">Deleted on <?= date('M d Y', $post['post_deleted']) ?></a></li>
+						<?php else: ?>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/edit">Edit</a></li>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/delete">Delete</a></li>
+						<?php endif; ?>
 					</ul><?php endif; ?>
 				</nav>
 				<p class="post-content"><?= nl2br(autolink($post['post_content'])) ?></p>
