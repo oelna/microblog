@@ -16,29 +16,12 @@
 	// get posts
 	$posts = db_select_posts(NOW, $config['posts_per_page'], 'desc', $offset);
 
-	header('Content-Type: text/html; charset=utf-8');
+	$title_suffix = '';
+	require(ROOT.DS.'snippets'.DS.'header.snippet.php');
 
-?><!DOCTYPE html>
-<html lang="<?= $config['language'] ?>" class="timeline">
-<head>
-	<meta charset="utf-8" />
-	<title><?= empty($config['microblog_account']) ? "" : $config['microblog_account'] . "'s "; ?>micro.blog</title>
-	<meta name="viewport" content="width=device-width" />
-	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed/json" />
-	<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="<?= $config['url'] ?>/feed/atom" />
-	<?php if($config['xmlrpc']): ?><link rel="EditURI" type="application/rsd+xml" title="RSD" href="<?= $config['url'] ?>/rsd" /><?php endif; ?>
-	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
-	<script src="<?= $config['url'] ?>/microblog.js" type="module" defer></script>
-</head>
-<body>
+?><body>
 	<div class="wrap">
-		<nav class="main">
-			<ul>
-				<li><a class="button" href="<?= $config['url'] ?>/">Timeline</a></li>
-				<?php if($config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li><?php endif; ?>
-				<?php if(!$config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/login">Login</a></li><?php endif; ?>
-			</ul>
-		</nav>
+		<?php require(ROOT.DS.'snippets'.DS.'nav.snippet.php'); ?>
 		<ul class="posts">
 		<?php if(!empty($posts)): ?>
 			<?php foreach($posts as $post): ?>
@@ -69,15 +52,6 @@
 			<?php if ($current_page < $total_pages): ?><a href="<?= $config['url'] ?>/page/<?= $current_page + 1 ?>" class="next">older updates</a><?php endif; ?>
 		</div>
 	</div>
-	<footer>
-		<nav>
-			<ul>
-				<li><a href="<?= $config['url'] ?>/feed/atom">ATOM Feed</a></li>
-				<li><a href="<?= $config['url'] ?>/feed/json">JSON Feed</a></li>
-				<?php if($config['xmlrpc']): ?><li><a href="<?= $config['url'] ?>/xmlrpc">XML-RPC</a></li><?php endif; ?>
-				<?php if($config['logged_in']): ?><li><a href="<?= $config['url'] ?>/logout">Logout</a></li><?php endif; ?>
-			</ul>
-		</nav>
-	</footer>
+	<?php require(ROOT.DS.'snippets'.DS.'footer.snippet.php'); ?>
 </body>
 </html>

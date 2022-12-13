@@ -2,16 +2,18 @@
 	require_once(__DIR__.DIRECTORY_SEPARATOR.'config.php');
 
 	// check user credentials
-	$config['logged_in'] = false;
 	$config['logged_in'] = check_login();
 
 	// subpages
+	$template = 'timeline';
 	if(is_numeric(path(0))) {
 		// show a single blog post
-		require_once(ROOT.DS.'single.inc.php');
+		$template = 'single';
+		require_once(ROOT.DS.'templates'.DS.'single.inc.php');
 
 	} elseif(mb_strtolower(path(0)) === 'login') {
-		require_once(ROOT.DS.'loginform.inc.php');
+		$template = 'login';
+		require_once(ROOT.DS.'templates'.DS.'loginform.inc.php');
 
 	} elseif(mb_strtolower(path(0)) === 'logout') {
 		$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
@@ -22,7 +24,8 @@
 		die();
 
 	} elseif(mb_strtolower(path(0)) === 'new') {
-		require_once(ROOT.DS.'postform.inc.php');
+		$template = 'postform';
+		require_once(ROOT.DS.'templates'.DS.'postform.inc.php');
 
 	} else {
 		// redirect everything else to the homepage
@@ -32,5 +35,5 @@
 		}
 
 		// show the homepage
-		require_once(ROOT.DS.'timeline.inc.php');
+		require_once(ROOT.DS.'templates'.DS.'timeline.inc.php');
 	}

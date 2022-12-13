@@ -1,0 +1,23 @@
+/*
+	The new CSS reset - version 1.7.3 (last updated 7.8.2022)
+	GitHub page: https://github.com/elad2412/the-new-css-reset
+*/
+*:where(:not(html, iframe, canvas, img, svg, video, audio):not(svg *, symbol *)) {
+	all: unset;
+	display: revert;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+a, button { cursor: revert; }
+ol, ul, menu { list-style: none; }
+img { max-width: 100%; }
+table { border-collapse: collapse; }
+input, textarea { -webkit-user-select: auto; }
+textarea { white-space: revert; }
+::placeholder {	color: unset; }
+:where([hidden]) { display: none; }

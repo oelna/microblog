@@ -1,5 +1,5 @@
 <?php
-  require_once(__DIR__.DIRECTORY_SEPARATOR.'config.php');
+  require_once(__DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config.php');
 
   header('Content-Type: text/xml; charset=utf-8');
 ?><rsd xmlns="http://archipelago.phrasewise.com/rsd" version="1.0">

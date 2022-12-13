@@ -44,27 +44,12 @@
 	// load the actual post
 	$post = db_select_post($id);
 
-?><!DOCTYPE html>
-<html lang="<?= $config['language'] ?>" class="post">
-<head>
-	<meta charset="utf-8" />
-	<title><?= empty($config['microblog_account']) ? "" : $config['microblog_account'] . "'s " ?>micro.blog - entry #<?= $id ?></title>
-	<meta name="viewport" content="width=device-width" />
-	<link rel="alternate" type="application/json" title="JSON Feed" href="<?= $config['url'] ?>/feed/json" />
-	<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="<?= $config['url'] ?>/feed/atom" />
-	<?php if($config['xmlrpc']): ?><link rel="EditURI" type="application/rsd+xml" title="RSD" href="<?= $config['url'] ?>/rsd" /><?php endif; ?>
-	<link rel="stylesheet" href="<?= $config['url'] ?>/microblog.css" />
-	<script src="<?= $config['url'] ?>/microblog.js" type="module" defer></script>
-</head>
-<body>
+	$title_suffix = 'entry #' . $id;
+	require(ROOT.DS.'snippets'.DS.'header.snippet.php');
+
+?><body>
 	<div class="wrap">
-		<nav class="main">
-			<ul>
-				<li><a class="button" href="<?= $config['url'] ?>/">Timeline</a></li>
-				<?php if($config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li><?php endif; ?>
-				<?php if(!$config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/login">Login</a></li><?php endif; ?>
-			</ul>
-		</nav>
+		<?php require(ROOT.DS.'snippets'.DS.'nav.snippet.php'); ?>
 		<ul class="posts">
 		<?php if(!empty($post)): ?>
 			<li class="single-post" data-post-id="<?= $post['id'] ?>">
@@ -110,14 +95,6 @@
 		<?php endif; ?>
 		</ul>
 	</div>
-	<footer>
-		<nav>
-			<ul>
-				<li><a href="<?= $config['url'] ?>/feed/atom">ATOM Feed</a></li>
-				<li><a href="<?= $config['url'] ?>/feed/json">JSON Feed</a></li>
-				<?php if($config['xmlrpc']): ?><li><a href="<?= $config['url'] ?>/xmlrpc">XML-RPC</a></li><?php endif; ?>
-			</ul>
-		</nav>
-	</footer>
+	<?php require(ROOT.DS.'snippets'.DS.'footer.snippet.php'); ?>
 </body>
 </html>

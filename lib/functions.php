@@ -239,7 +239,7 @@ function uuidv4($data = null) { // https://stackoverflow.com/a/15875555/3625228
 
 function twitter_post_status($status='') {
 	global $config;
-	require_once(ROOT.DS.'twitter_api.php');
+	require_once(ROOT.DS.'lib'.DS.'twitter_api.php');
 
 	if(empty($status)) return array('errors' => 1);
 	if(empty($config['twitter']['oauth_access_token']) ||

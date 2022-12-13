@@ -1,29 +1,31 @@
-* {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-size: 100%;
-	box-sizing: border-box;
+@import './reset.css';
+
+:root {
+	--primary-color: #007aff;
+	--secondary-color: #fffceb;
+
+	--background-color: #b5b5af;
+	--text-color: #080f15;
 }
 
 html {
 	font: 100%/1.4 system-ui, Helvetica, sans-serif;
-	background-color: #b5b5af;
-	color: #080f15;
+	background-color: var(--background-color);
+	color: var(--text-color);
 }
 
 .wrap {
 	width: min(95%, 40rem);
 	margin: 2rem auto;
 	padding: 1rem;
-	background-color: #fffceb;
+	background-color: var(--secondary-color);
 	box-shadow: 0 1.25rem 1rem -1rem rgba(0,0,0,0.25);
 }
 
 .button {
 	display: block;
-	background: #007aff;
-	color: #fffceb;
+	background: var(--primary-color);
+	color: var(--secondary-color);
 	text-decoration: none;
 	border-radius: 0.4rem;
 	padding: 0.2rem 0.5rem;
@@ -80,8 +82,8 @@ nav.main li + li a {
 .timeline .pagination { overflow: hidden; }
 .timeline .pagination a {
 	display: block;
-	background: #007aff;
-	color: #fffceb;
+	background: var(--primary-color);
+	color: var(--secondary-color);
 	text-decoration: none;
 	border-radius: 0.4rem;
 	padding: 0.2rem 0.6rem;
@@ -92,7 +94,7 @@ nav.main li + li a {
 
 .wrap .post-timestamp {
 	display: block;
-	color: #007aff;
+	color: var(--primary-color);
 	text-decoration: none;
 	font-size: 0.8rem;
 	text-transform: uppercase;
@@ -137,7 +139,7 @@ nav.main li + li a {
 }
 
 .wrap .post-content a {
-	color: #007aff;
+	color: var(--primary-color);
 	text-decoration: none;
 }
 
@@ -169,7 +171,8 @@ form.edit,
 
 :is(.postform, .edit) textarea {
 	width: 100%;
-	border: 2px solid #b5b5af;
+	border: 2px solid var(--background-color);
+	background: #fff;
 	padding: 0.5rem;
 	font-size: 1.25rem;
 	resize: vertical;
@@ -178,7 +181,7 @@ form.edit,
 }
 
 :is(.postform, .edit) textarea:focus {
-	border-color: #007aff;
+	border-color: var(--primary-color);
 	outline: none;
 }
 
@@ -188,8 +191,8 @@ form.edit,
 	appearance: none;
 	border: 0;
 	display: block;
-	background: #007aff;
-	color: #fffceb;
+	background: var(--primary-color);
+	color: var(--secondary-color);
 	text-decoration: none;
 	border-radius: 0.4rem;
 	padding: 0.3rem 0.8rem 0.4rem;
@@ -201,14 +204,14 @@ form.edit,
 
 :is(.postform, .edit) #count {
 	float: left;
-	color: #b5b5af;
+	color: var(--background-color);
 }
 
 :is(.postform, .edit) .message,
 .login .message {
 	background-color: #87b26c;
 	padding: 0.5rem;
-	color: #fffceb;
+	color: var(--secondary-color);
 	border-radius: 0.4rem;
 	margin-bottom: 0.5rem;
 }
@@ -221,7 +224,7 @@ form.edit,
 .login input[type="text"],
 .login input[type="password"] {
 	width: 100%;
-	border: 2px solid #b5b5af;
+	border: 2px solid var(--background-color);
 	padding: 0.5rem;
 	font-size: 1.25rem;
 	resize: vertical;
@@ -230,7 +233,7 @@ form.edit,
 
 .login input[type="text"]:focus,
 .login input[type="password"]:focus {
-	border-color: #007aff;
+	border-color: var(--primary-color);
 	outline: none;
 }
 
