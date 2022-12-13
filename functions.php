@@ -6,6 +6,26 @@ function path($fragment=null) {
 	return (!empty($config['path'][$fragment])) ? $config['path'][$fragment] : false;
 }
 
+function check_login() {
+	global $config;
+
+	if(isset($_COOKIE['microblog_login'])) {
+		if($_COOKIE['microblog_login'] === sha1($config['url'].$config['admin_pass'])) {
+			// correct auth data, extend cookie life
+			$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+			setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
+
+			return true;
+		} else {
+			// invalid cookie data
+			unset($_COOKIE['microblog_login']);
+			setcookie('microblog_login', '', time()-3600, '/', $domain, false);
+		}
+	}
+
+	return false;
+}
+
 function db_insert($content, $timestamp=NOW) {
 	global $db;
 	if(empty($db)) return false;
@@ -106,7 +126,7 @@ function db_posts_count() {
 function ping_microblog() {
 	global $config;
 	$ping_url = 'https://micro.blog/ping';
-	$feed_url = $config['url'].'/feed.json';
+	$feed_url = $config['url'].'/feed/json';
 
 	$ch = curl_init($ping_url);
 	curl_setopt($ch, CURLOPT_POST, true);

@@ -1,13 +1,11 @@
 <?php
 	if(!defined('ROOT')) die('Don\'t call this directly.');
-	header('Content-Type: text/html; charset=utf-8');
 
-	// check user credentials
-	if(isset($_COOKIE['microblog_login']) && $_COOKIE['microblog_login'] === sha1($config['url'].$config['admin_pass'])) {
-		// correct auth data, extend cookie life
-		$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
-		setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
-	}
+	// never cache the timeline (?)
+	header('Expires: Sun, 01 Jan 2014 00:00:00 GMT');
+	header('Cache-Control: no-store, no-cache, must-revalidate');
+	header('Cache-Control: post-check=0, pre-check=0', FALSE);
+	header('Pragma: no-cache');
 
 	// pagination
 	$current_page = (path(0) == 'page' && is_numeric(path(1))) ? (int) path(1) : 1;
@@ -17,6 +15,8 @@
 
 	// get posts
 	$posts = db_select_posts(NOW, $config['posts_per_page'], 'desc', $offset);
+
+	header('Content-Type: text/html; charset=utf-8');
 
 ?><!DOCTYPE html>
 <html lang="<?= $config['language'] ?>" class="timeline">
@@ -35,7 +35,8 @@
 		<nav class="main">
 			<ul>
 				<li><a class="button" href="<?= $config['url'] ?>/">Timeline</a></li>
-				<li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li>
+				<?php if($config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li><?php endif; ?>
+				<?php if(!$config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/login">Login</a></li><?php endif; ?>
 			</ul>
 		</nav>
 		<ul class="posts">
@@ -51,10 +52,10 @@
 				?>
 				<a class="post-timestamp" href="<?= $config['url'] ?>/<?= $post['id'] ?>"><time datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time></a>
 				<nav class="post-meta">
-					<ul>
+					<?php if($config['logged_in']): ?><ul>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/edit">Edit</a></li>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/delete">Delete</a></li>
-					</ul>
+					</ul><?php endif; ?>
 				</nav>
 				<div class="post-content"><?= nl2br(autolink($post['post_content'])) ?></div>
 			</li>
@@ -74,6 +75,7 @@
 				<li><a href="<?= $config['url'] ?>/feed/atom">ATOM Feed</a></li>
 				<li><a href="<?= $config['url'] ?>/feed/json">JSON Feed</a></li>
 				<?php if($config['xmlrpc']): ?><li><a href="<?= $config['url'] ?>/xmlrpc">XML-RPC</a></li><?php endif; ?>
+				<?php if($config['logged_in']): ?><li><a href="<?= $config['url'] ?>/logout">Logout</a></li><?php endif; ?>
 			</ul>
 		</nav>
 	</footer>

@@ -7,7 +7,7 @@
 			$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
 			setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
 
-			header('Location: '.$config['url'].'/new');
+			header('Location: '.$config['url']);
 			die();
 		} else {
 			header('HTTP/1.0 401 Unauthorized');
@@ -34,10 +34,11 @@
 </head>
 <body>
 	<div class="wrap">
-		<nav>
+		<nav class="main">
 			<ul>
-				<li><a href="<?= $config['url'] ?>/">Timeline</a></li>
-				<li><a href="<?= $config['url'] ?>/new">New Status</a></li>
+				<li><a class="button" href="<?= $config['url'] ?>/">Timeline</a></li>
+				<?php if($config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li><?php endif; ?>
+				<?php if(!$config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/login">Login</a></li><?php endif; ?>
 			</ul>
 		</nav>
 		<p>Please enter your login information.</p>

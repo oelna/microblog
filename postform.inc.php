@@ -1,19 +1,12 @@
 <?php
 	if(!defined('ROOT')) die('Don\'t call this directly.');
 
-	// check user credentials
-	if(isset($_COOKIE['microblog_login']) && $_COOKIE['microblog_login'] === sha1($config['url'].$config['admin_pass'])) {
-		// correct auth data, extend cookie life
-		$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
-		setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
-	} else {
+	if(!$config['logged_in']) {
 		// wrong data, kick user to login page
 		header('HTTP/1.0 401 Unauthorized');
 		header('Location: '.$config['url'].'/login');
 		die();
 	}
-
-	header('Content-Type: text/html; charset=utf-8');
 
 	$message = array();
 	if(!empty($_POST['content'])) {
@@ -41,6 +34,8 @@
 		}
 	}
 
+	header('Content-Type: text/html; charset=utf-8');
+
 ?><!DOCTYPE html>
 <html lang="<?= $config['language'] ?>" class="postform">
 <head>
@@ -58,7 +53,8 @@
 		<nav class="main">
 			<ul>
 				<li><a class="button" href="<?= $config['url'] ?>/">Timeline</a></li>
-				<li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li>
+				<?php if($config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li><?php endif; ?>
+				<?php if(!$config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/login">Login</a></li><?php endif; ?>
 			</ul>
 		</nav>
 		<?php if(isset($message['status']) && isset($message['message'])): ?>

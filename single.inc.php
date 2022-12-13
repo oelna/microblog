@@ -8,32 +8,36 @@
 	if(mb_strtolower(path(1)) == 'delete') $action = 'delete';
 	if(mb_strtolower(path(1)) == 'edit') $action = 'edit';
 
-	// delete post
 	$error = false;
-	if(!empty($_POST['action']) && $_POST['action'] == 'delete') {
-		$result = db_delete((int) $_POST['id']);
+	if($config['logged_in']) {
 
-		if(!$result) {
-			$error = 'Post could not be deleted!';
-		} else {
-			rebuild_feeds();
+		// delete post
+		if(!empty($_POST['action']) && $_POST['action'] == 'delete') {
+			$result = db_delete((int) $_POST['id']);
 
-			header('Location: '.$config['url']);
-			die();
+			if(!$result) {
+				$error = 'Post could not be deleted!';
+			} else {
+				rebuild_feeds();
+
+				header('Location: '.$config['url']);
+				die();
+			}
 		}
-	}
 
-	// edit post
-	if(!empty($_POST['action']) && $_POST['action'] == 'edit') {
-		$result = db_update((int) $_POST['id'], $_POST['content']);
+		// edit post
+		if(!empty($_POST['action']) && $_POST['action'] == 'edit') {
 
-		if(!$result) {
-			$error = 'Post could not be updated!';
-		} else {
-			rebuild_feeds();
+			$result = db_update((int) $_POST['id'], $_POST['content']);
 
-			header('Location: '.$config['url'].'/'.$_POST['id']);
-			die();
+			if(!$result) {
+				$error = 'Post could not be updated!';
+			} else {
+				rebuild_feeds();
+
+				header('Location: '.$config['url'].'/'.$_POST['id']);
+				die();
+			}
 		}
 	}
 
@@ -57,7 +61,8 @@
 		<nav class="main">
 			<ul>
 				<li><a class="button" href="<?= $config['url'] ?>/">Timeline</a></li>
-				<li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li>
+				<?php if($config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/new">New Status</a></li><?php endif; ?>
+				<?php if(!$config['logged_in']): ?><li><a class="button" href="<?= $config['url'] ?>/login">Login</a></li><?php endif; ?>
 			</ul>
 		</nav>
 		<ul class="posts">
@@ -82,10 +87,10 @@
 				?>
 				<span class="post-timestamp"><time datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time></span>
 				<nav class="post-meta">
-					<ul>
+					<?php if($config['logged_in']): ?><ul>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/edit">Edit</a></li>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/delete">Delete</a></li>
-					</ul>
+					</ul><?php endif; ?>
 				</nav>
 				<p class="post-content"><?= nl2br(autolink($post['post_content'])) ?></p>
 				<?php if($action == 'delete'): ?>
