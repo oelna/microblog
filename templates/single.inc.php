@@ -102,7 +102,7 @@
 						<?php endif; ?>
 					</ul><?php endif; ?>
 				</nav>
-				<p class="post-content"><?= nl2br(autolink($post['post_content'])) ?></p>
+				<div class="post-content"><?= nl2br(autolink($post['post_content'])) ?></div>
 				<?php if($action == 'delete'): ?>
 					<form action="" method="post" class="delete">
 						<input type="hidden" name="action" value="delete" />
