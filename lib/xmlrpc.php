@@ -3,11 +3,9 @@
 $request_xml = file_get_contents("php://input");
 
 // check prerequisites
-if(!function_exists('xmlrpc_server_create')) { exit('No XML-RPC support detected!'); }
+if(!$config['xmlrpc']) { exit('No XML-RPC support detected!'); }
 if(empty($request_xml)) { exit('XML-RPC server accepts POST requests only.'); }
 
-// load config
-require_once(__DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config.php');
 $logfile = ROOT.DS.'log.txt';
 
 if(!function_exists('str_starts_with')) {

@@ -19,8 +19,6 @@ RewriteEngine On
 RewriteBase /microblog
 
 # friendly URLs
-RewriteRule ^rsd/?$ lib/rsd.xml.php [L]
-RewriteRule ^xmlrpc/?(.*)$ lib/xmlrpc.php?/$1 [L]
 RewriteRule ^feed/json/?$ feed/feed.json [L]
 RewriteRule ^feed/atom/?$ feed/feed.xml [L]
 

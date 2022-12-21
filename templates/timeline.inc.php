@@ -36,6 +36,8 @@
 					
 					$datetime = date_format($date, 'Y-m-d H:i:s');
 					$formatted_time = date_format($date, 'M d Y H:i');
+
+					$attachments = db_get_attached_files($post['id']);
 				?>
 				<a class="post-timestamp" href="<?= $config['url'] ?>/<?= $post['id'] ?>">
 					<time class="published" datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time>
@@ -50,6 +52,34 @@
 					</ul><?php endif; ?>
 				</nav>
 				<div class="post-content"><?= nl2br(autolink($post['post_content'])) ?></div>
+				<?php if(!empty($attachments)): ?>
+				<?php
+					$attachments_total = count($attachments);
+					// only display the first attachment on the timeline
+					array_splice($attachments, 1);
+				?>
+				<ul class="post-attachments">
+					<?php foreach($attachments as $a): ?>
+					<li title="<?= ($attachments_total > 1) ? 'and '.($attachments_total-1).' more' : '' ?>">
+						<?php if(strpos($a['file_mime_type'], 'image') === 0): ?>
+							<?php
+								$abs = ROOT.DS.get_file_path($a);
+								list($width, $height, $_, $size_string) = getimagesize($abs);
+								$url = $config['url'] .'/'. get_file_path($a);
+							?>
+							<a href="<?= $config['url'] ?>/<?= $post['id'] ?>">
+								<picture>
+									<source srcset="<?= $url ?>" type="image/jpeg" />
+									<img src="<?= $url ?>" alt="<?= $a['file_original'] ?>" <?= $size_string ?> loading="lazy" />
+								</picture>
+							</a>
+						<?php else: ?>
+							<a href="<?= $url ?>" download="<?= $a['file_original'] ?>"><?= $a['file_original'] ?></a>
+						<?php endif; ?>
+					</li>
+					<?php endforeach; ?>
+				</ul>
+				<?php endif; ?>
 			</li>
 			<?php endforeach; ?>
 		</ul>

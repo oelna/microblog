@@ -98,6 +98,33 @@ function db_select_post($id=0) {
 	return (!empty($row)) ? $row : false;
 }
 
+function db_get_attached_files($post_id, $include_deleted=false) {
+	global $db;
+	if(empty($db)) return false;
+
+	$rows = [];
+
+	if($include_deleted) {
+		$sql = 'SELECT f.* FROM files f LEFT JOIN file_to_post p WHERE f.id = p.file_id AND p.post_id = :post_id ORDER BY f.file_timestamp ASC';
+	} else {
+		$sql = 'SELECT f.* FROM files f LEFT JOIN file_to_post p WHERE f.id = p.file_id AND p.post_id = :post_id AND p.deleted IS NULL ORDER BY f.file_timestamp ASC';
+	}
+
+	try {
+		$statement = $db->prepare($sql);
+		$statement->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+		
+		$statement->execute();
+
+		$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+	} catch(PDOException $e) {
+		// print 'Exception : '.$e->getMessage();
+		return false;
+	}
+
+	return (!empty($rows)) ? $rows : false;
+}
+
 function db_select_posts($from, $amount=10, $sort='desc', $offset=0) {
 	global $db;
 	if(empty($db)) return false;
@@ -124,6 +151,225 @@ function db_posts_count() {
 	$row = $statement->fetch(PDO::FETCH_ASSOC);
 
 	return (int) $row['posts_count'];
+}
+
+function convert_files_array($input_array) {
+	$file_array = [];
+	$file_count = count($input_array['name']);
+	$file_keys = array_keys($input_array);
+
+	for ($i=0; $i<$file_count; $i++) {
+		foreach ($file_keys as $key) {
+			$file_array[$i][$key] = $input_array[$key][$i];
+		}
+	}
+
+	return $file_array;
+}
+
+function attach_uploaded_files($files=[], $post_id=null) {
+	if(empty($files['tmp_name'][0])) return false;
+	
+	$files = convert_files_array($files);
+	//var_dump($files);exit();
+
+	foreach($files as $file) {
+
+		if (!isset($file['error']) || is_array($file['error'])) {
+			// invalid parameters
+			// var_dump('bad file info');exit();
+			continue; // skip this file
+		}
+
+		if($file['size'] > 20000000) {
+			// Exceeded filesize limit.
+			// var_dump('invalid file size');exit();
+			continue;
+		}
+
+		$mime = mime_content_type($file['tmp_name']);
+		if (false === $ext = array_search(
+			$mime,
+			array(
+				'jpg' => 'image/jpeg',
+				'png' => 'image/png',
+				'gif' => 'image/gif',
+				'avif' => 'image/avif',
+				'webp' => 'image/webp',
+				// todo: video
+				'txt' => 'text/plain',
+				'md' => 'text/markdown',
+			),
+			true
+		)) {
+			// Invalid file format.
+			// var_dump('invalid format');exit();
+			continue;
+		}
+
+		save_file($file['name'], $ext, $file['tmp_name'], $post_id, $mime);
+	}
+}
+
+function detatch_files($file_ids=[], $post_id=null) {
+	global $db;
+	if(empty($db)) return false;
+	if(empty($file_ids)) return false;
+	if(!$post_id) return false;
+
+	$file_id = null;
+
+	try {
+		$statement = $db->prepare('UPDATE file_to_post SET deleted = :delete_time WHERE file_id = :file_id AND post_id = :post_id');
+
+		$statement->bindParam(':file_id', $file_id, PDO::PARAM_INT);
+		$statement->bindParam(':post_id', $post_id, PDO::PARAM_INT);
+		$statement->bindValue(':delete_time', time(), PDO::PARAM_INT);
+
+		foreach ($file_ids as $id) {
+			$file_id = $id;
+			$statement->execute();
+		}
+
+	} catch(PDOException $e) {
+		// print 'Exception : '.$e->getMessage();
+		return false;
+	}
+
+	return true;
+}
+
+function db_select_file($query, $method='id') {
+	global $db;
+	if(empty($db)) return false;
+	if($id === 0) return false;
+
+	switch ($method) {
+		case 'hash':
+			$statement = $db->prepare('SELECT * FROM files WHERE file_hash = :q LIMIT 1');
+			$statement->bindValue(':q', $query, PDO::PARAM_STR);
+			break;
+		case 'filename':
+			$statement = $db->prepare('SELECT * FROM files WHERE file_filename = :q LIMIT 1');
+			$statement->bindValue(':q', $query, PDO::PARAM_STR);
+			break;
+		default:
+			$statement = $db->prepare('SELECT * FROM files WHERE id = :q LIMIT 1');
+			$statement->bindValue(':q', $query, PDO::PARAM_INT);
+			break;
+	}
+	
+	$statement->execute();
+	$row = $statement->fetch(PDO::FETCH_ASSOC);
+
+	return (!empty($row)) ? $row : false;
+}
+
+function db_link_file($file_id, $post_id) {
+	global $db;
+	if(empty($db)) return false;
+
+	try {
+		$statement = $db->prepare('INSERT INTO file_to_post (file_id, post_id) VALUES (:file_id, :post_id)');
+
+		$statement->bindValue(':file_id', $file_id, PDO::PARAM_INT);
+		$statement->bindValue(':post_id', $post_id, PDO::PARAM_INT);
+
+		$statement->execute();
+	} catch(PDOException $e) {
+		// print 'Exception : '.$e->getMessage();
+		return false;
+	}
+
+	return true;
+}
+
+function save_file($filename, $extension, $tmp_file, $post_id, $mime='') {
+	global $db;
+	if(empty($db)) return false;
+
+	$files_dir = ROOT.DS.'files';
+	$hash_algo = 'sha1';
+
+	$insert = [
+		'file_extension' => $extension,
+		'file_original' => $filename,
+		'file_mime_type' => $mime,
+		'file_size' => filesize($tmp_file),
+		'file_hash' => hash_file($hash_algo, $tmp_file),
+		'file_hash_algo' => $hash_algo,
+		'file_meta' => '{}',
+		'file_dir' => date('Y'),
+		'file_subdir' => date('m'),
+		'file_timestamp' => time()
+	];
+
+	if(!is_dir($files_dir.DS.$insert['file_dir'])) {
+		mkdir($files_dir.DS.$insert['file_dir'], 0755);
+	}
+
+	if(!is_dir($files_dir.DS.$insert['file_dir'].DS.$insert['file_subdir'])) {
+		mkdir($files_dir.DS.$insert['file_dir'].DS.$insert['file_subdir'], 0755);
+	}
+
+	$insert['file_filename'] = $post_id . '-' . substr($insert['file_hash'], 0, 7);
+	$path = $files_dir.DS.$insert['file_dir'].DS.$insert['file_subdir'];
+
+	if(move_uploaded_file($tmp_file, $path.DS.$insert['file_filename'] .'.'. $insert['file_extension'])) {
+		// add to database
+
+		// check if file exists already
+		$existing = db_select_file($insert['file_hash'], 'hash');
+
+		if(!empty($existing)) {
+			// just link existing file
+			if(db_link_file($existing['id'], $post_id)) {
+				return $existing['id'];
+			} else {
+				return false;
+			}
+		} else {
+			// insert new
+			try {
+				$statement = $db->prepare('INSERT INTO files (file_filename, file_extension, file_original, file_mime_type, file_size, file_hash, file_hash_algo, file_meta, file_dir, file_subdir, file_timestamp) VALUES (:file_filename, :file_extension, :file_original, :file_mime_type, :file_size, :file_hash, :file_hash_algo, :file_meta, :file_dir, :file_subdir, :file_timestamp)');
+
+				$statement->bindValue(':file_filename', $insert['file_filename'], PDO::PARAM_STR);
+				$statement->bindValue(':file_extension', $insert['file_extension'], PDO::PARAM_STR);
+				$statement->bindValue(':file_original', $insert['file_original'], PDO::PARAM_STR);
+				$statement->bindValue(':file_mime_type', $insert['file_mime_type'], PDO::PARAM_STR);
+				$statement->bindValue(':file_size', $insert['file_size'], PDO::PARAM_INT);
+				$statement->bindValue(':file_hash', $insert['file_hash'], PDO::PARAM_STR);
+				$statement->bindValue(':file_hash_algo', $insert['file_hash_algo'], PDO::PARAM_STR);
+				$statement->bindValue(':file_meta', $insert['file_meta'], PDO::PARAM_STR);
+				$statement->bindValue(':file_dir', $insert['file_dir'], PDO::PARAM_STR);
+				$statement->bindValue(':file_subdir', $insert['file_subdir'], PDO::PARAM_STR);
+				$statement->bindValue(':file_timestamp', $insert['file_timestamp'], PDO::PARAM_INT);
+
+				$statement->execute();
+
+				// todo: check this?
+				db_link_file($db->lastInsertId(), $post_id);
+
+				return $db->lastInsertId();
+			} catch(PDOException $e) {
+				print 'Exception : '.$e->getMessage();
+				return false;
+			}
+		}
+	}
+
+	return false;
+}
+
+function get_file_path($file) {
+	$url = '';
+
+	$url .= 'files/';
+	$url .= $file['file_dir'] . '/';
+	$url .= $file['file_subdir'] . '/';
+	$url .= $file['file_filename'] . '.' . $file['file_extension'];
+
+	return $url;
 }
 
 /* function that pings the official micro.blog endpoint for feed refreshes */
@@ -178,13 +424,33 @@ function rebuild_json_feed($posts=[]) {
 
 	foreach($posts as $post) {
 
+		$attachments = db_get_attached_files($post['id']);
+		$post_attachments = [];
+		if(!empty($attachments)) {
+			foreach ($attachments as $a) {
+				$post_attachments[] = [
+					'url' => $config['url'] .'/'. get_file_path($a),
+					'mime_type' => $a['file_mime_type'],
+					'size_in_bytes' => $a['file_size']
+				];
+			}
+		}
+
+		$post_images = array_filter($post_attachments, function($v) {
+			return strpos($v['mime_type'], 'image') === 0;
+		});
+
 		$feed['items'][] = array(
 			'id' => ($post['post_guid'] ? 'urn:uuid:'.$post['post_guid'] : $config['url'].'/'.$post['id']),
 			'url' => $config['url'].'/'.$post['id'],
 			'title' => '',
 			'content_html' => $post['post_content'],
-			'date_published' => gmdate('Y-m-d\TH:i:s\Z', $post['post_timestamp'])
+			'date_published' => gmdate('Y-m-d\TH:i:s\Z', $post['post_timestamp']),
+			'image' => !empty($post_images) ? $post_images[0]['url'] : '',
+			'attachments' => $post_attachments
 		);
+
+		
 	}
 
 	if(file_put_contents($filename, json_encode($feed, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {

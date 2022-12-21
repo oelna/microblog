@@ -10,7 +10,7 @@
 
 	$message = array();
 	if(!empty($_POST['content'])) {
-
+		
 		$id = db_insert($_POST['content'], NOW);
 
 		if($id > 0) {
@@ -18,6 +18,11 @@
 				'status' => 'success',
 				'message' => 'Successfully posted status #'.$id
 			);
+
+			// handle files
+			if(!empty($_FILES['attachments'])) {
+				attach_uploaded_files($_FILES['attachments'], $id);
+			}
 
 			rebuild_feeds();
 			if($config['ping'] == true) ping_microblog();
@@ -43,10 +48,16 @@
 		<?php if(isset($message['status']) && isset($message['message'])): ?>
 		<p class="message <?= $message['status'] ?>"><?= $message['message'] ?></p>
 		<?php endif; ?>
-		<form action="" method="post">
+		<form action="" method="post" enctype="multipart/form-data" id="post-new-form" data-redirect="<?= $config['url'] ?>">
 			<textarea name="content" maxlength="<?= $config['max_characters'] ?>"></textarea>
-			<p id="count"><?= $config['max_characters'] ?></p>
-			<input type="submit" name="" value="Post" />
+
+			<div class="post-nav">
+				<label id="post-attachments-label">Add Files<input type="file" multiple="multiple" name="attachments[]" id="post-attachments" accept="image/*" /></label>
+				<div id="post-droparea" class="hidden">Add Files</div>
+				<ul id="post-attachments-list"></ul>
+				<p id="count"><?= $config['max_characters'] ?></p>
+				<input type="submit" name="" value="Post" />
+			</div>
 		</form>
 	</div>
 	<?php require(ROOT.DS.'snippets'.DS.'footer.snippet.php'); ?>
