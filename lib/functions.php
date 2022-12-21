@@ -304,6 +304,10 @@ function save_file($filename, $extension, $tmp_file, $post_id, $mime='') {
 		'file_timestamp' => time()
 	];
 
+	if(!is_dir($files_dir)) {
+		mkdir($files_dir, 0755);
+	}
+
 	if(!is_dir($files_dir.DS.$insert['file_dir'])) {
 		mkdir($files_dir.DS.$insert['file_dir'], 0755);
 	}
