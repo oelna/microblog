@@ -29,7 +29,7 @@ For crossposting to twitter, the app uses code from [J7mbo/twitter-api-php](http
 
 - test whether the [ping function](http://help.micro.blog/2017/api-feeds/) actually works
 - improve html rendering (?)
-- support file attachments
+- support file attachments (started! can attach images to posts and remove them)
 - maybe improve theming support by adding a themes dir, moving the CSS there and setting theme via config file (started)
 - see issues
 
