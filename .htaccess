@@ -14,9 +14,12 @@ AddType application/json .json
   </IfModule>
 </Files>
 
+# deny access to key files
+RedirectMatch 403 ^/keys/.*$
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteBase /microblog
+RewriteBase /
 
 # friendly URLs
 RewriteRule ^feed/json/?$ feed/feed.json [L]

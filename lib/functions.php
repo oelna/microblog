@@ -19,7 +19,7 @@ function check_login() {
 		} else {
 			// invalid cookie data
 			unset($_COOKIE['microblog_login']);
-			setcookie('microblog_login', '', time()-3600, '/', $domain, false);
+			setcookie('microblog_login', '', time()-3600, '/', false, false);
 		}
 	}
 
