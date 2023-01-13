@@ -38,6 +38,17 @@
 			case 'xmlrpc':
 				require_once(ROOT.DS.'lib'.DS.'xmlrpc.php');
 				break;
+			case '.well-known':
+				if(!empty(path(1)) && path(1) == 'webfinger') {
+					require_once(ROOT.DS.'lib'.DS.'activitypub-webfinger.php');
+				} else {
+					http_response_code(404);
+					die();
+				}
+				break;
+			case 'actor':
+				require_once(ROOT.DS.'lib'.DS.'activitypub-actor.php');
+				break;
 			default:
 				// redirect everything else to the homepage
 				if(!empty(path(0)) && path(0) != 'page') {
