@@ -98,9 +98,14 @@ function db_select_post($id=0) {
 	return (!empty($row)) ? $row : false;
 }
 
-function db_get_attached_files($post_id, $include_deleted=false) {
+function db_get_attached_files($post_ids=[], $include_deleted=false) {
 	global $db;
 	if(empty($db)) return false;
+	if(empty($post_ids)) return [];
+	if(!is_array($post_ids)) {
+		// accomodate shorthand syntax with single ID
+		$post_ids = [$post_ids];
+	}
 
 	$rows = [];
 
@@ -110,19 +115,27 @@ function db_get_attached_files($post_id, $include_deleted=false) {
 		$sql = 'SELECT f.* FROM files f LEFT JOIN file_to_post p WHERE f.id = p.file_id AND p.post_id = :post_id AND p.deleted IS NULL ORDER BY f.file_timestamp ASC';
 	}
 
-	try {
-		$statement = $db->prepare($sql);
-		$statement->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-		
-		$statement->execute();
+	$statement = $db->prepare($sql);
 
-		$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+	$result = [];
+	try {
+		
+		foreach($post_ids as $id) {
+			$statement->bindParam(':post_id', $id, PDO::PARAM_INT);
+			$statement->execute();
+
+			$result[$id] = [];
+
+			while ($row = $statement->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_NEXT)) {
+				$result[$id][] = $row;
+			}
+		}
 	} catch(PDOException $e) {
 		// print 'Exception : '.$e->getMessage();
 		return false;
 	}
 
-	return (!empty($rows)) ? $rows : false;
+	return (!empty($result)) ? $result : false;
 }
 
 function db_select_posts($from, $amount=10, $sort='desc', $offset=0) {
@@ -426,9 +439,13 @@ function rebuild_json_feed($posts=[]) {
 		'items' => array()
 	);
 
+	$post_ids = array_column($posts, 'id');
+	$attached_files = db_get_attached_files($post_ids);
+
 	foreach($posts as $post) {
 
-		$attachments = db_get_attached_files($post['id']);
+		// $attachments = db_get_attached_files($post['id']);
+		$attachments = !empty($attached_files[$post['id']]) ? $attached_files[$post['id']] : [];
 		$post_attachments = [];
 		if(!empty($attachments)) {
 			foreach ($attachments as $a) {
@@ -453,8 +470,6 @@ function rebuild_json_feed($posts=[]) {
 			'image' => !empty($post_images) ? $post_images[0]['url'] : '',
 			'attachments' => $post_attachments
 		);
-
-		
 	}
 
 	if(file_put_contents($filename, json_encode($feed, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {
@@ -478,7 +493,12 @@ function rebuild_atom_feed($posts=[]) {
 	$feed .= '<id>'.$config['url'].'</id>'.NL;
 	$feed .= '<updated>'.gmdate('Y-m-d\TH:i:s\Z').'</updated>'.NL;
 
+	$post_ids = array_column($posts, 'id');
+	$attached_files = db_get_attached_files($post_ids);
+
 	foreach($posts as $post) {
+
+		$post_images = !empty($attached_files[$post['id']]) ? $attached_files[$post['id']] : [];
 
 		$published = gmdate('Y-m-d\TH:i:s\Z', $post['post_timestamp']);
 		$updated = ($post['post_edited'] > $post['post_timestamp']) ? gmdate('Y-m-d\TH:i:s\Z', $post['post_edited']) : $published;
@@ -489,7 +509,14 @@ function rebuild_atom_feed($posts=[]) {
 		$feed .= '<id>'.($post['post_guid'] ? 'urn:uuid:'.$post['post_guid'] : $config['url'].'/'.$post['id']).'</id>'.NL;
 		$feed .= '<updated>'.$updated.'</updated>'.NL;
 		$feed .= '<published>'.$published.'</published>'.NL;
-		$feed .= '<content type="text">'.$post['post_content'].'</content>'.NL;
+		
+		if(!empty($post_images)) {
+			// todo: render attached images
+			$feed .= '<content type="text">'.$post['post_content'].'</content>'.NL;
+		} else {
+			$feed .= '<content type="text">'.$post['post_content'].'</content>'.NL;
+		}
+
 		$feed .= '</entry>'.NL;
 	}
 

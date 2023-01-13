@@ -109,8 +109,8 @@
 							<?php
 								$attachments = db_get_attached_files($post['id']);
 							?>
-							<?php if(!empty($attachments)): ?>
-								<?php foreach($attachments as $a): ?>
+							<?php if(!empty($attachments) && !empty($attachments[$post['id']])): ?>
+								<?php foreach($attachments[$post['id']] as $a): ?>
 									<?php if(strpos($a['file_mime_type'], 'image') === 0): ?>
 									<?php
 										$abs = ROOT.DS.get_file_path($a);
@@ -142,7 +142,6 @@
 					$formatted_time = date_format($date, 'M d Y H:i');
 
 					$attachments = db_get_attached_files($post['id']);
-					// var_dump($attachments);
 				?>
 				<span class="post-timestamp">
 					<time class="published" datetime="<?= $datetime ?>" data-unix-time="<?= $post['post_timestamp'] ?>"><?= $formatted_time ?></time>
@@ -161,9 +160,9 @@
 					</ul><?php endif; ?>
 				</nav>
 				<div class="post-content"><?= nl2br(autolink($post['post_content'])) ?></div>
-				<?php if(!empty($attachments)): ?>
+				<?php if(!empty($attachments) && !empty($attachments[$post['id']])): ?>
 				<ul class="post-attachments">
-					<?php foreach($attachments as $a): ?>
+					<?php foreach($attachments[$post['id']] as $a): ?>
 					<li>
 						<?php if(strpos($a['file_mime_type'], 'image') === 0): ?>
 							<?php

@@ -52,14 +52,14 @@
 					</ul><?php endif; ?>
 				</nav>
 				<div class="post-content"><?= nl2br(autolink($post['post_content'])) ?></div>
-				<?php if(!empty($attachments)): ?>
+				<?php if(!empty($attachments) && !empty($attachments[$post['id']])): ?>
 				<?php
-					$attachments_total = count($attachments);
+					$attachments_total = count($attachments[$post['id']]);
 					// only display the first attachment on the timeline
-					array_splice($attachments, 1);
+					array_splice($attachments[$post['id']], 1);
 				?>
 				<ul class="post-attachments">
-					<?php foreach($attachments as $a): ?>
+					<?php foreach($attachments[$post['id']] as $a): ?>
 					<li title="<?= ($attachments_total > 1) ? 'and '.($attachments_total-1).' more' : '' ?>">
 						<?php if(strpos($a['file_mime_type'], 'image') === 0): ?>
 							<?php
