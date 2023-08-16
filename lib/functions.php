@@ -155,7 +155,7 @@ function db_select_posts($from, $amount=10, $sort='desc', $offset=0) {
 }
 
 function db_posts_count() {
-	global $config;
+	// global $config;
 	global $db;
 	if(empty($db)) return false;
 
@@ -164,6 +164,24 @@ function db_posts_count() {
 	$row = $statement->fetch(PDO::FETCH_ASSOC);
 
 	return (int) $row['posts_count'];
+}
+
+function mime_to_extension($mime) {
+	if(empty($mime)) return false;
+	$mime = trim($mime);
+
+	$mime_types = [
+		'image/jpg' => 'jpg',
+		'image/jpeg' => 'jpg',
+		'image/png' => 'png',
+		'image/avif' => 'avif',
+		'image/webp' => 'webp',
+
+		'text/plain' => 'txt',
+		'text/markdown' => 'md',
+	];
+
+	return isset($mime_types[$mime]) ? $mime_types[$mime] : false;
 }
 
 function convert_files_array($input_array) {
@@ -181,10 +199,10 @@ function convert_files_array($input_array) {
 }
 
 function attach_uploaded_files($files=[], $post_id=null) {
+	// todo: implement php-blurhash?
 	if(empty($files['tmp_name'][0])) return false;
-	
+
 	$files = convert_files_array($files);
-	//var_dump($files);exit();
 
 	foreach($files as $file) {
 
@@ -194,7 +212,7 @@ function attach_uploaded_files($files=[], $post_id=null) {
 			continue; // skip this file
 		}
 
-		if($file['size'] > 20000000) {
+		if($file['size'] == 0 || $file['size'] > 20000000) {
 			// Exceeded filesize limit.
 			// var_dump('invalid file size');exit();
 			continue;
@@ -225,6 +243,7 @@ function attach_uploaded_files($files=[], $post_id=null) {
 }
 
 function detatch_files($file_ids=[], $post_id=null) {
+	// == "db_unlink_files"
 	global $db;
 	if(empty($db)) return false;
 	if(empty($file_ids)) return false;
@@ -255,7 +274,6 @@ function detatch_files($file_ids=[], $post_id=null) {
 function db_select_file($query, $method='id') {
 	global $db;
 	if(empty($db)) return false;
-	if($id === 0) return false;
 
 	switch ($method) {
 		case 'hash':
@@ -271,7 +289,7 @@ function db_select_file($query, $method='id') {
 			$statement->bindValue(':q', $query, PDO::PARAM_INT);
 			break;
 	}
-	
+
 	$statement->execute();
 	$row = $statement->fetch(PDO::FETCH_ASSOC);
 
@@ -283,7 +301,7 @@ function db_link_file($file_id, $post_id) {
 	if(empty($db)) return false;
 
 	try {
-		$statement = $db->prepare('INSERT INTO file_to_post (file_id, post_id) VALUES (:file_id, :post_id)');
+		$statement = $db->prepare('INSERT OR REPLACE INTO file_to_post (file_id, post_id, deleted) VALUES (:file_id, :post_id, NULL)');
 
 		$statement->bindValue(':file_id', $file_id, PDO::PARAM_INT);
 		$statement->bindValue(':post_id', $post_id, PDO::PARAM_INT);
@@ -295,6 +313,11 @@ function db_link_file($file_id, $post_id) {
 	}
 
 	return true;
+}
+
+function make_file_hash($file, $algo='sha1') {
+	if(!file_exists($file)) return false;
+	return hash_file($algo, $file);
 }
 
 function save_file($filename, $extension, $tmp_file, $post_id, $mime='') {
@@ -309,13 +332,19 @@ function save_file($filename, $extension, $tmp_file, $post_id, $mime='') {
 		'file_original' => $filename,
 		'file_mime_type' => $mime,
 		'file_size' => filesize($tmp_file),
-		'file_hash' => hash_file($hash_algo, $tmp_file),
+		'file_hash' => make_file_hash($tmp_file, $hash_algo),
 		'file_hash_algo' => $hash_algo,
-		'file_meta' => '{}',
+		'file_meta' => [],
 		'file_dir' => date('Y'),
 		'file_subdir' => date('m'),
 		'file_timestamp' => time()
 	];
+
+	if(substr($mime, 0, 5) === 'image') {
+		$file_dimensions = getimagesize($tmp_file);
+
+		list($insert['file_meta']['width'], $insert['file_meta']['height']) = getimagesize($tmp_file);
+	}
 
 	if(!is_dir($files_dir)) {
 		mkdir($files_dir, 0755);
@@ -332,14 +361,22 @@ function save_file($filename, $extension, $tmp_file, $post_id, $mime='') {
 	$insert['file_filename'] = $post_id . '-' . substr($insert['file_hash'], 0, 7);
 	$path = $files_dir.DS.$insert['file_dir'].DS.$insert['file_subdir'];
 
-	if(move_uploaded_file($tmp_file, $path.DS.$insert['file_filename'] .'.'. $insert['file_extension'])) {
+	if(rename($tmp_file, $path.DS.$insert['file_filename'] .'.'. $insert['file_extension'])) {
 		// add to database
+
+		chmod($path.DS.$insert['file_filename'] .'.'. $insert['file_extension'], 0644);
 
 		// check if file exists already
 		$existing = db_select_file($insert['file_hash'], 'hash');
 
 		if(!empty($existing)) {
-			// just link existing file
+			// discard the newly uploaded file!
+			// unlink($path.DS.$insert['file_filename'] .'.'. $insert['file_extension']); // WHY?!!
+
+			// handle file uploads without post ID, eg via XMLRPC
+			if($post_id == 0) return $existing['id'];
+
+			// just link existing one!
 			if(db_link_file($existing['id'], $post_id)) {
 				return $existing['id'];
 			} else {
@@ -357,12 +394,15 @@ function save_file($filename, $extension, $tmp_file, $post_id, $mime='') {
 				$statement->bindValue(':file_size', $insert['file_size'], PDO::PARAM_INT);
 				$statement->bindValue(':file_hash', $insert['file_hash'], PDO::PARAM_STR);
 				$statement->bindValue(':file_hash_algo', $insert['file_hash_algo'], PDO::PARAM_STR);
-				$statement->bindValue(':file_meta', $insert['file_meta'], PDO::PARAM_STR);
+				$statement->bindValue(':file_meta', json_encode($insert['file_meta']), PDO::PARAM_STR);
 				$statement->bindValue(':file_dir', $insert['file_dir'], PDO::PARAM_STR);
 				$statement->bindValue(':file_subdir', $insert['file_subdir'], PDO::PARAM_STR);
 				$statement->bindValue(':file_timestamp', $insert['file_timestamp'], PDO::PARAM_INT);
 
 				$statement->execute();
+
+				// handle file uploads without post ID, eg via XMLRPC
+				if($post_id == 0) return $db->lastInsertId();
 
 				// todo: check this?
 				db_link_file($db->lastInsertId(), $post_id);
@@ -387,6 +427,36 @@ function get_file_path($file) {
 	$url .= $file['file_filename'] . '.' . $file['file_extension'];
 
 	return $url;
+}
+
+function get_file_url($file) {
+	global $config;
+
+	if(empty($file)) return false;
+
+	$url = $config['url'];
+	$path = get_file_path($file);
+
+	return $config['url'].DS.$path;
+}
+
+function images_from_html($html) {
+	$matches = array();
+	$regex = '/<img.*?src="(.*?)"/';
+	preg_match_all($regex, $html, $matches);
+
+	if(!empty($matches) && !empty($matches[1])) return $matches[1];
+
+	return [];
+}
+
+function strip_img_tags($html) {
+	return trim(preg_replace("/<img[^>]+\>/i", "", $html));
+}
+
+function filter_tags($html) {
+	$allowed = '<em><i><strong><b><a><br><br />';
+	return strip_tags($html, $allowed);
 }
 
 /* function that pings the official micro.blog endpoint for feed refreshes */
@@ -557,3 +627,5 @@ function twitter_post_status($status='') {
 	$twitter = new TwitterAPIExchange($config['twitter']);
 	return $twitter->buildOauth($url, 'POST')->setPostfields($postfields)->performRequest();
 }
+
+require_once(__DIR__.DS.'activitypub-functions.php');

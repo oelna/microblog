@@ -1,5 +1,7 @@
 <?php
 
+	if(!$config['activitypub']) exit();
+
 	// todo: handle empty usernames
 
 	$actor = ltrim($config['microblog_account'], '@');
@@ -18,5 +20,5 @@
 		]
 	];
 
-	header('Content-Type: application/ld+json');
+	header('Content-Type: application/jrd+json');
 	echo(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));

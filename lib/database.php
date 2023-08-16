@@ -93,5 +93,71 @@ if($config['db_version'] == 3) {
 	}
 }
 
+// v5, update for activitypub
+if($config['db_version'] == 4) {
+	try {
+		$db->exec("PRAGMA `user_version` = 5;
+			CREATE TABLE IF NOT EXISTS `followers` (
+				`id` INTEGER PRIMARY KEY NOT NULL,
+				`follower_name` TEXT NOT NULL,
+				`follower_host` TEXT NOT NULL,
+				`follower_actor` TEXT,
+				`follower_inbox` TEXT,
+				`follower_shared_inbox` TEXT,
+				`follower_added` INTEGER
+			);
+			CREATE UNIQUE INDEX `followers_users` ON followers (`follower_name`, `follower_host`);
+			CREATE INDEX `followers_shared_inboxes` ON followers (`follower_shared_inbox`);
+		");
+		$config['db_version'] = 5;
+	} catch(PDOException $e) {
+		print 'Exception : '.$e->getMessage();
+		die('cannot upgrade database table to v5!');
+	}
+}
+
+// v6, update for activitypub likes and announces
+if($config['db_version'] == 5) {
+	try {
+		$db->exec("PRAGMA `user_version` = 6;
+			CREATE TABLE IF NOT EXISTS `activities` (
+				`id` INTEGER PRIMARY KEY NOT NULL,
+				`activity_actor_name` TEXT NOT NULL,
+				`activity_actor_host` TEXT NOT NULL,
+				`activity_type` TEXT NOT NULL,
+				`activity_object_id` INTEGER NOT NULL,
+				`activity_updated` INTEGER
+			);
+			CREATE INDEX `activities_objects` ON activities (`activity_object_id`);
+			CREATE UNIQUE INDEX `activities_unique` ON activities (`activity_actor_name`, `activity_actor_host`, `activity_type`, `activity_object_id`);
+		");
+		$config['db_version'] = 6;
+	} catch(PDOException $e) {
+		print 'Exception : '.$e->getMessage();
+		die('cannot upgrade database table to v6!');
+	}
+}
+
+// v7, update for activitypub key storage
+if($config['db_version'] == 6) {
+	try {
+		$db->exec("PRAGMA `user_version` = 6;
+			CREATE TABLE IF NOT EXISTS `keys` (
+				`id` INTEGER PRIMARY KEY NOT NULL,
+				`key_private` TEXT NOT NULL,
+				`key_public` TEXT NOT NULL,
+				`key_algo` TEXT DEFAULT 'sha512',
+				`key_bits` INTEGER DEFAULT 4096,
+				`key_type` TEXT DEFAULT 'rsa',
+				`key_created` INTEGER
+			);
+		");
+		$config['db_version'] = 7;
+	} catch(PDOException $e) {
+		print 'Exception : '.$e->getMessage();
+		die('cannot upgrade database table to v7!');
+	}
+}
+
 // debug: get a list of post table columns
 // var_dump($db->query("PRAGMA table_info(`posts`)")->fetchAll(PDO::FETCH_COLUMN, 1));

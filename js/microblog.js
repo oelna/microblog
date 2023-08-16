@@ -24,7 +24,7 @@ if (textarea) {
 
 const postForm = document.querySelector('#post-new-form');
 let useDragDrop = (!!window.FileReader && 'draggable' in document.createElement('div'));
-useDragDrop = true;
+// useDragDrop = false; // remove, only for testing!
 if (postForm) {
 	const droparea = postForm.querySelector('#post-droparea');
 	const attachmentsInput = postForm.querySelector('#post-attachments');
@@ -158,8 +158,8 @@ if (postForm) {
 
 				if (response.ok && response.status == 200) {
 					const txt = await response.text();
-					// console.log(response, txt);
-					window.location.href = postForm.dataset.redirect;
+					// console.log('form result', response, txt);
+					window.location.href = postForm.dataset.redirect + '?t=' + Date.now();
 				} else {
 					console.warn('error during post submission!', response);
 				}

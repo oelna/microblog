@@ -7,6 +7,7 @@
 	if(mb_strtolower(path(1)) == 'delete') $action = 'delete';
 	if(mb_strtolower(path(1)) == 'undelete') $action = 'undelete';
 	if(mb_strtolower(path(1)) == 'edit') $action = 'edit';
+	if(mb_strtolower(path(1)) == 'json') $action = 'json';
 
 	$error = false;
 	if($config['logged_in']) {
@@ -18,7 +19,14 @@
 			if(!$result) {
 				$error = 'Post could not be deleted!';
 			} else {
+
 				rebuild_feeds();
+
+				if($config['activitypub']) {
+					// todo: send DELETE activity to followers
+					// https://www.w3.org/TR/activitypub/#delete-activity-inbox
+					activitypub_delete_post($_POST['id']);
+				}
 
 				header('Location: '.$config['url']);
 				die();
@@ -72,6 +80,12 @@
 			} else {
 				rebuild_feeds();
 
+				if($config['activitypub']) {
+					// todo: send UPDATE activity to followers
+					// https://www.w3.org/TR/activitypub/#update-activity-inbox
+					activitypub_update_post($_POST['id']);
+				}
+
 				header('Location: '.$config['url'].'/'.$_POST['id']);
 				die();
 			}
@@ -86,10 +100,19 @@
 		}
 	}
 
+	if($action == 'json') {
+
+		$json = activitypub_activity_from_post($post, true);
+
+		header('Content-Type: application/ld+json');
+		echo($json);
+		die();
+	}
+
 	$title_suffix = 'entry #' . $id;
 	require(ROOT.DS.'snippets'.DS.'header.snippet.php');
 
-?><body>
+?><body ontouchstart="">
 	<div class="wrap">
 		<?php require(ROOT.DS.'snippets'.DS.'nav.snippet.php'); ?>
 		<ul class="posts">
@@ -150,14 +173,24 @@
 					<?php endif; ?>
 				</span>
 				<nav class="post-meta">
-					<?php if($config['logged_in']): ?><ul>
+					<ul>
+						<?php if($config['activitypub']):
+							// todo: is it possible to retrieve this at the same time as post data?
+							$post_stats = activitypub_get_post_stats('both', $post['id']);
+						?>
+						<li class="post-likes"><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/likes" title="This post has been liked <?= $post_stats['like'] ?> times in the Fediverse"><span class="amount"><?= $post_stats['like'] ?></span><span class="word">Likes</span></a></li>
+						<li class="post-boosts"><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/boosts" title="This post has been announced <?= $post_stats['announce'] ?> times in the Fediverse"><span class="amount"><?= $post_stats['announce'] ?></span><span class="word">Boosts</span></a></li>
+						<?php endif; ?>
+
+						<?php if($config['logged_in']): ?>
 						<?php if(is_numeric($post['post_deleted'])): ?>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/undelete" title="Restore">Deleted on <?= date('M d Y', $post['post_deleted']) ?></a></li>
 						<?php else: ?>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/edit">Edit</a></li>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/delete">Delete</a></li>
 						<?php endif; ?>
-					</ul><?php endif; ?>
+						<?php endif; ?>
+					</ul>
 				</nav>
 				<div class="post-content"><?= nl2br(autolink($post['post_content'])) ?></div>
 				<?php if(!empty($attachments) && !empty($attachments[$post['id']])): ?>

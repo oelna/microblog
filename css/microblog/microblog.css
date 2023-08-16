@@ -1,4 +1,4 @@
-@import './reset.css';
+@import '../reset.css';
 
 :root {
 	--primary-color: #007aff;
@@ -146,6 +146,38 @@ nav.main li + li a {
 
 .wrap .post-meta li a:is(:hover, :focus) {
 	color: currentColor;
+}
+
+.wrap .post-meta li span.amount {
+	margin-inline-end: 0.25ch;
+}
+
+.wrap .post-meta li span.word { display: inline-block; text-indent: -9999px; }
+.wrap .post-meta li span.amount::after {
+	display: inline-block;
+	content: '';
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: contain;
+	vertical-align: middle;
+	margin-inline-start: 0.25ch;
+	opacity: 0.25;
+}
+
+.wrap .post-meta li a:is(:hover, :focus) span.amount::after {
+	opacity: 1;
+}
+
+.wrap .post-meta li.post-likes span.amount::after {
+	background-image: url(./icons/icon-like.svg);
+	width: 0.7rem;
+	height: 0.7rem;
+}
+
+.wrap .post-meta li.post-boosts span.amount::after {
+	background-image: url(./icons/icon-announce.svg);
+	width: 1rem;
+	height: 1rem;
 }
 
 .wrap .post-content {

@@ -16,6 +16,9 @@
 	} else {
 		$page = mb_strtolower(path(0));
 
+		// why?
+		// if($page == '.well_known' && path(1) == 'webfinger') { $page = 'webfinger'; }
+
 		switch($page) {
 			case 'login':
 				$template = 'login';
@@ -46,12 +49,35 @@
 					die();
 				}
 				break;
+			/*
+			case 'webfinger':
+				die('aaaa');
+				if(!empty(path(1)) && path(1) == 'webfinger') {
+					require_once(ROOT.DS.'lib'.DS.'activitypub-webfinger.php');
+				} else {
+					die('xxx');
+					http_response_code(404);
+					die();
+				}
+				die('abc');
+				break;
+			*/
 			case 'actor':
 				require_once(ROOT.DS.'lib'.DS.'activitypub-actor.php');
+				break;
+			case 'followers':
+				require_once(ROOT.DS.'lib'.DS.'activitypub-followers.php');
+				break;
+			case 'outbox':
+				require_once(ROOT.DS.'lib'.DS.'activitypub-outbox.php');
+				break;
+			case 'inbox':
+				require_once(ROOT.DS.'lib'.DS.'activitypub-inbox.php');
 				break;
 			default:
 				// redirect everything else to the homepage
 				if(!empty(path(0)) && path(0) != 'page') {
+					// die(path(0) . path(1) . 'WTF');
 					header('Location: '.$config['url']);
 					die();
 				}

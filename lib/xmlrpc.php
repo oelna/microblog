@@ -1,10 +1,10 @@
 <?php
 
-$request_xml = file_get_contents("php://input");
+$request_xml = isset($request_xml) ? $request_xml : file_get_contents("php://input");
 
 // check prerequisites
 if(!$config['xmlrpc']) { exit('No XML-RPC support detected!'); }
-if(empty($request_xml)) { exit('XML-RPC server accepts POST requests only.'); }
+if(empty($request_xml) && !isset($_GET['test'])) { exit('XML-RPC server accepts POST requests only.'); }
 
 $logfile = ROOT.DS.'log.txt';
 
@@ -53,6 +53,15 @@ function make_post($post, $method='metaWeblog') {
 	@xmlrpc_set_type($date_modified, 'datetime');
 	@xmlrpc_set_type($date_modified_gmt, 'datetime');
 
+	// format file attachments
+	if(!empty($post['post_attachments'])) {
+		foreach($post['post_attachments'] as $attachment) {
+			// todo: handle attachments other than images
+			$attachment_url = get_file_url($attachment);
+			$post['post_content'] .= PHP_EOL.'<img src="'.$attachment_url.'" alt="" />';
+		}
+	}
+
 	if(str_starts_with($method, 'microblog')) {
 		// convert the post format to a microblog post
 		// similar to metaWeblog.recentPosts but with offset parameter for paging,
@@ -63,7 +72,7 @@ function make_post($post, $method='metaWeblog') {
 			'date_modified' => $date_modified,
 			'permalink' => $config['url'].'/'.$post['id'],
 			'title' => '',
-			'description' => ($post['post_content']),
+			'description' => $post['post_content'],
 			'categories' => [],
 			'post_status' => 'published',
 			'author' => [
@@ -78,7 +87,7 @@ function make_post($post, $method='metaWeblog') {
 		$mw_post = [
 			'postid' => (int) $post['id'],
 			'title' => '',
-			'description' => ($post['post_content']), // Post content
+			'description' => $post['post_content'], // Post content
 			'link' => $config['url'].'/'.$post['id'], // Post URL
 			// string userid†: ID of post author.
 			'dateCreated' => $date_created,
@@ -141,6 +150,15 @@ function mw_get_categories($method_name, $args) {
 		];
 	} else {
 		$categories = [
+			[
+				'categoryId' => '1',
+				'parentId' => '0',
+				'categoryName' => 'default',
+				'categoryDescription' => 'The default category',
+				'description' => 'default',
+				'htmlUrl' => '/',
+				'rssUrl' => '/'
+			]
 			/*
 			[
 				'description' => 'Default',
@@ -198,8 +216,18 @@ function mw_get_recent_posts($method_name, $args) {
 	if(!$amount) $amount = 25;
 	$amount = min($amount, 200); // cap the max available posts at 200 (?)
 
-	$posts = db_select_posts(null, $amount, 'asc', $offset);
+	$posts = db_select_posts(null, $amount, 'desc', $offset);
 	if(empty($posts)) return [];
+
+	// get attached files
+	$ids = array_column($posts, 'id');
+	$attached_files = db_get_attached_files($ids);
+
+	for ($i=0; $i < count($posts); $i++) { 
+		if(!empty($attached_files[$posts[$i]['id']])) {
+			$posts[$i]['post_attachments'] = $attached_files[$posts[$i]['id']];
+		}
+	}
 
 	// call make_post() on all items
 	$mw_posts = array_map('make_post', $posts, array_fill(0, count($posts), $method_name));
@@ -208,6 +236,7 @@ function mw_get_recent_posts($method_name, $args) {
 }
 
 function mw_get_post($method_name, $args) {
+	// todo: find a way to represent media attachments to editors
 
 	list($post_id, $username, $password) = $args;
 
@@ -219,6 +248,14 @@ function mw_get_post($method_name, $args) {
 	}
 
 	$post = db_select_post($post_id);
+
+	// get attached files
+	$attached_files = db_get_attached_files($post_id);
+
+	if(!empty($attached_files[$post_id])) {
+		$post['post_attachments'] = $attached_files[$post_id];
+	}
+
 	if($post) {
 		if($method_name == 'microblog.getPost') {
 			$mw_post = make_post($post, $method_name);
@@ -236,9 +273,16 @@ function mw_get_post($method_name, $args) {
 }
 
 function mw_new_post($method_name, $args) {
+	global $config;
 
-	// blog_id, unknown, unknown, array of post content, unknown
-	list($blog_id, $username, $password, $content, $_) = $args;
+	if($method_name == 'blogger.newPost') {
+		// app_key (unused), blog_id, user, pass, array of post content, publish/draft
+
+		list($_, $blog_id, $username, $password, $content, $publish_flag) = $args;
+	} else {
+		// blog_id, user, pass, array of post content, unknown
+		list($blog_id, $username, $password, $content, $_) = $args;
+	}
 
 	if(!check_credentials($username, $password)) {
 		return [
@@ -260,6 +304,12 @@ function mw_new_post($method_name, $args) {
 		if(isset($content['date_created'])) {
 			$post['post_timestamp'] = $content['date_created']->timestamp;
 		}
+	} elseif($method_name == 'blogger.newPost') {
+		// support eg. micro.blog iOS app
+		$post = [
+			'post_content' => $content,
+			'post_timestamp' => time()
+		];
 	} else {
 		$post = [
 			// 'post_hp' => $content['flNotOnHomePage'],
@@ -275,8 +325,28 @@ function mw_new_post($method_name, $args) {
 		}
 	}
 
+	// clean up image tags and get references to image files
+	$image_urls = images_from_html($post['post_content']);
+
+	// remove image tags
+	$post['post_content'] = strip_img_tags($post['post_content']);
+
 	$insert_id = db_insert($post['post_content'], $post['post_timestamp']);
 	if($insert_id && $insert_id > 0) {
+		// create references to file attachments
+		if(!empty($image_urls)) {
+			foreach ($image_urls as $url) {
+				if(str_contains($url, $config['url'])) {
+					$filename = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_FILENAME);
+
+					// todo: match by hash instead of filename??
+
+					$file = db_select_file($filename, 'filename');
+					if($file) db_link_file($file['id'], $insert_id);
+				}
+			}
+		}
+
 		// success
 		rebuild_feeds();
 
@@ -293,9 +363,12 @@ function mw_new_post($method_name, $args) {
 }
 
 function mw_edit_post($method_name, $args) {
+	// todo: make this work with different hash algorithms, as stored in the DB
+	global $config;
+	global $db;
 
-	// post_id, unknown, unknown, array of post content
-	list($post_id, $username, $password, $content, $_) = $args;
+	// post_id, user, password, array of post content
+	list($post_id, $username, $password, $content) = $args;
 
 	if(!check_credentials($username, $password)) {
 		return [
@@ -329,6 +402,77 @@ function mw_edit_post($method_name, $args) {
 			$post['post_timestamp'] = $content['dateCreated']->timestamp;
 		}
 	}
+
+	// compare old and new image attachments:
+
+	// load existing attachments
+	$attached_files = db_get_attached_files($post_id);
+
+	// extract new attachments from images
+	$image_urls = images_from_html($post['post_content']);
+
+var_dump($image_urls);
+	// compare via file hash
+	$hashes_of_existing_links = array_column(reset($attached_files), 'file_hash');
+	$hashes_of_edited_post = [];
+
+	foreach($image_urls as $url) {
+		$file_path = ROOT.parse_url($url, PHP_URL_PATH); // fragile?
+
+		if(file_exists($file_path)) {
+			var_dump($file_path);
+			$hashes_of_edited_post[] = make_file_hash($file_path);
+		}
+	}
+	// $hashes_of_edited_post = array_unique($hashes_of_edited_post);
+
+	$hashes_to_link = array_diff($hashes_of_edited_post, $hashes_of_existing_links);
+	$hashes_to_unlink = array_diff($hashes_of_existing_links, $hashes_of_edited_post);
+
+	
+	var_dump([
+		'post_id' => $post_id,
+		'existing' => $hashes_of_existing_links,
+		'new' => $hashes_of_edited_post,
+		'to_link' => $hashes_to_link,
+		'to_unlink' => $hashes_to_unlink
+	]);
+	
+
+	try {
+		$statement = $db->prepare('INSERT OR REPLACE INTO file_to_post (file_id, post_id, deleted) VALUES ((SELECT id FROM files WHERE file_hash = :file_hash LIMIT 1), :post_id, :deleted)');
+
+		$attachment = [
+			'hash' => null,
+			'post' => $post_id
+		];
+
+		$statement->bindParam(':file_hash', $attachment['hash'], PDO::PARAM_STR);
+		$statement->bindParam(':post_id', $attachment['post'], PDO::PARAM_INT);
+
+		// link
+		foreach ($hashes_to_link as $hash) {
+			$attachment['hash'] = $hash;
+			$statement->bindValue(':deleted', null, PDO::PARAM_NULL);
+			$statement->execute();
+		}
+
+		// unlink
+		foreach ($hashes_to_unlink as $hash) {
+			$attachment['hash'] = $hash;
+			$statement->bindValue(':deleted', time(), PDO::PARAM_INT);
+			$statement->execute();
+		}
+
+	} catch(PDOException $e) {
+		return [
+			'faultCode' => 400,
+			'faultString' => 'Post update SQL error: '.$e->getMessage()
+		];
+	}
+
+	// remove html img tags
+	$post['post_content'] = strip_img_tags($post['post_content']);
 
 	$update = db_update($post_id, $post['post_content'], $post['post_timestamp']);
 	if($update && $update > 0) {
@@ -373,22 +517,81 @@ function mw_delete_post($method_name, $args) {
 	}
 }
 
+function mw_new_media_object($method_name, $args) {
+	global $config;
+
+	list($blog_id, $username, $password, $data) = $args;
+
+	if(!check_credentials($username, $password)) {
+		return [
+			'faultCode' => 403,
+			'faultString' => 'Incorrect username or password.'
+		];
+	}
+
+	$new_ext = pathinfo($data['name'], PATHINFO_EXTENSION);
+	if(!empty($data['type'])) {
+		$new_ext = mime_to_extension($data['type']);
+	}
+
+	// file_put_contents(ROOT.DS.'test.txt', json_encode([$data['type'], pathinfo($data['name'], PATHINFO_EXTENSION), $new_ext]));
+
+	$media_object = $data['bits']->scalar;
+
+	// save the file to a temporary location
+	$tmp_file = tempnam(sys_get_temp_dir(), 'microblog_');
+	file_put_contents($tmp_file, $media_object);
+
+	// make a DB entry for the file
+	$new_file_id = save_file($data['name'], $new_ext, $tmp_file, 0, $data['type']);
+
+	// get file info
+	$file = db_select_file($new_file_id, 'id');
+	// $file_path = get_file_path($file);
+
+	$url = get_file_url($file);
+
+	$success = ($new_file_id) ? 1 : 0;
+
+	if($success > 0) {
+		// If newMediaObject succeeds, it returns a struct, which must contain at least one element, url, which is the url through which the object can be accessed. It must be either an FTP or HTTP url.
+		return [
+			// 'url' => 'https://microblog.oelna.de/files/this-is-a-test.jpg'
+			'url' => $url,
+			'title' => $file['file_original'],
+			'type' => $data['type'] ? $data['type'] : 'image/jpg' // is this reasonable?
+		];
+	} else {
+		// If newMediaObject fails, it throws an error.
+		return [
+			'faultCode' => 400,
+			'faultString' => 'Could not store media object.'
+		];
+	}
+}
+
 // https://codex.wordpress.org/XML-RPC_MetaWeblog_API
 // https://community.devexpress.com/blogs/theprogressbar/metablog.ashx
 // idea: http://www.hixie.ch/specs/pingback/pingback#TOC3
 $server = xmlrpc_server_create();
 xmlrpc_server_register_method($server, 'demo.sayHello', 'say_hello');
 
-xmlrpc_server_register_method($server, 'blogger.getUsersBlogs', 'mw_get_users_blogs');
-xmlrpc_server_register_method($server, 'blogger.getUserInfo', 'mw_get_user_info');
+// http://nucleuscms.org/docs//item/204
+xmlrpc_server_register_method($server, 'blogger.newPost', 'mw_new_post');
+xmlrpc_server_register_method($server, 'blogger.editPost', 'mw_edit_post');
+xmlrpc_server_register_method($server, 'blogger.getPost', 'mw_get_post');
 xmlrpc_server_register_method($server, 'blogger.deletePost', 'mw_delete_post');
+xmlrpc_server_register_method($server, 'blogger.getUsersBlogs', 'mw_get_users_blogs');
+xmlrpc_server_register_method($server, 'blogger.getRecentPosts', 'mw_get_recent_posts');
+xmlrpc_server_register_method($server, 'blogger.getUserInfo', 'mw_get_user_info');
+xmlrpc_server_register_method($server, 'blogger.newMediaObject', 'mw_new_media_object');
 
 xmlrpc_server_register_method($server, 'metaWeblog.getCategories', 'mw_get_categories');
 xmlrpc_server_register_method($server, 'metaWeblog.getRecentPosts', 'mw_get_recent_posts');
 xmlrpc_server_register_method($server, 'metaWeblog.newPost', 'mw_new_post');
 xmlrpc_server_register_method($server, 'metaWeblog.editPost', 'mw_edit_post');
 xmlrpc_server_register_method($server, 'metaWeblog.getPost', 'mw_get_post');
-// xmlrpc_server_register_method($server, 'metaWeblog.newMediaObject', 'mw_new_mediaobject');
+xmlrpc_server_register_method($server, 'metaWeblog.newMediaObject', 'mw_new_media_object');
 
 // non-standard convenience?
 xmlrpc_server_register_method($server, 'metaWeblog.getPosts', 'mw_get_recent_posts');
@@ -402,7 +605,7 @@ xmlrpc_server_register_method($server, 'microblog.getPost', 'mw_get_post');
 xmlrpc_server_register_method($server, 'microblog.newPost', 'mw_new_post');
 xmlrpc_server_register_method($server, 'microblog.editPost', 'mw_edit_post');
 xmlrpc_server_register_method($server, 'microblog.deletePost', 'mw_delete_post');
-// xmlrpc_server_register_method($server, 'microblog.newMediaObject', 'mw_new_mediaobject');
+xmlrpc_server_register_method($server, 'microblog.newMediaObject', 'mw_new_media_object');
 
 // micro.blog pages are not supported
 /*
@@ -413,14 +616,17 @@ xmlrpc_server_register_method($server, 'microblog.editPage', 'say_hello');
 xmlrpc_server_register_method($server, 'microblog.deletePage', 'say_hello');
 */
 
-// https://docstore.mik.ua/orelly/webprog/pcook/ch12_08.htm
-$response = xmlrpc_server_call_method($server, $request_xml, null, [
-	'escaping' => 'markup',
-	'encoding' => 'UTF-8'
-]);
+if(!isset($_GET['test'])) {
+	// https://docstore.mik.ua/orelly/webprog/pcook/ch12_08.htm
+	$response = xmlrpc_server_call_method($server, $request_xml, null, [
+		'escaping' => 'markup',
+		'encoding' => 'UTF-8'
+	]);
 
-if($response) {
-	header('Content-Type: text/xml; charset=utf-8');
-	error_log($request_xml."\n\n".$response."\n\n", 3, $logfile);
-	echo($response);
+	if($response) {
+		header('Content-Type: text/xml; charset=utf-8');
+		// todo: make error logging a config option
+		// error_log(date('Y-m-d H:i:s')."\n".$request_xml."\n\n".$response."\n\n", 3, $logfile);
+		echo($response);
+	}
 }

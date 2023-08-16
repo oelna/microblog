@@ -1,0 +1,451 @@
+@import '../reset.css';
+
+/*
+	// SYSTEM FONTS
+
+	.body { font: -apple-system-body }
+	.headline { font: -apple-system-headline }
+	.subheadline { font: -apple-system-subheadline }
+	.caption1 { font: -apple-system-caption1 }
+	.caption2 { font: -apple-system-caption2 }
+	.footnote { font: -apple-system-footnote }
+	.short-body { font: -apple-system-short-body }
+	.short-headline { font: -apple-system-short-headline }
+	.short-subheadline { font: -apple-system-short-subheadline }
+	.short-caption1 { font: -apple-system-short-caption1 }
+	.short-footnote { font: -apple-system-short-footnote }
+	.tall-body { font: -apple-system-tall-body }
+
+
+	// SYSTEM COLORS https://blog.jim-nielsen.com/2021/css-system-colors/
+
+	AccentColor // Background of accented user interface controls
+	AccentColorText // Text of accented user interface controls
+	ActiveText // Text of active links
+	ButtonBorder // Base border color of controls
+	ButtonFace // Background color of controls
+	ButtonText // Text color of controls
+	Canvas // Background of application content or documents
+	CanvasText // Text color in application content or documents
+	Field // Background of input fields
+	FieldText // Text in input fields
+	GrayText // Text color for disabled items (e.g. a disabled control)
+	Highlight // Background of selected items
+	HighlightText // Text color of selected items
+	LinkText // Text of non-active, non-visited links
+	Mark // Background of text that has been specially marked (such as by the HTML mark element)
+	MarkText // Text that has been specially marked (such as by the HTML mark element)
+	VisitedText // Text of visited links
+*/
+
+:root {
+	color-scheme: light dark;
+
+	--primary-color: CanvasText;
+	--secondary-color: ButtonText;
+
+	--background-color: Canvas;
+	--text-color: CanvasText;
+}
+
+html {
+	font: 100%/1.4 system-ui, Helvetica, sans-serif;
+	background-color: var(--background-color);
+	color: var(--text-color);
+
+	accent-color: var(--primary-color);
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	tap-highlight-color: transparent;
+	-webkit-touch-callout: none;
+	touch-callout: none;
+}
+
+img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+.wrap {
+	width: min(95%, 40rem);
+	margin: 2rem auto;
+	padding: 1rem;
+}
+
+.button {
+	display: block;
+	background: var(--primary-color);
+	color: var(--background-color);
+	text-decoration: none;
+	border-radius: 0.4rem;
+	padding: 0.2rem 0.5rem;
+	font-weight: bold;
+	text-align: center;
+}
+
+.button.alert {
+	background: coral;
+}
+
+.hidden {
+	display: none !important;
+}
+
+nav.main ul {
+	display: flex;
+	margin-bottom: 2rem;
+}
+
+nav.main li {
+	list-style: none;
+	flex: 1;
+}
+
+nav.main li a {
+	/* inherits from .button */
+}
+
+nav.main li + li a {
+	margin-left: 0.2rem;
+}
+
+.wrap .posts {
+
+}
+
+.wrap .posts > li {
+	list-style: none;
+	margin-bottom: 1rem;
+	border-bottom: 1px solid CanvasText;
+	padding-bottom: 1rem;
+
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+}
+
+.wrap .posts > li > * {
+	outline: 0px solid #f0f;
+}
+
+.wrap .posts > li:last-child {
+	margin-bottom: 2rem;
+	border-bottom: 0;
+	padding-bottom: 0;
+}
+
+.timeline .pagination { overflow: hidden; }
+.timeline .pagination a {
+	display: block;
+	background: var(--primary-color);
+	color: Canvas;
+	text-decoration: none;
+	border-radius: 0.4rem;
+	padding: 0.2rem 0.6rem;
+	font-weight: bold;
+	float: left;
+}
+.timeline .pagination .next { float: right; }
+
+.wrap .post-timestamp {
+	display: block;
+	color: CanvasText;
+	text-decoration: none;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+	grid-column-start: span 3;
+}
+
+.wrap .post-timestamp time.modified {
+	display: block;
+	/* color: hsla(0, 0%, 0%, 0.2); */
+	/* mix-blend-mode: multiply; */
+	color: color-mix(in oklch, CanvasText 20%, Canvas);
+}
+
+.wrap .post-meta {
+	grid-column-start: span 3;
+}
+
+.wrap .post-meta ul {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75ch;
+}
+
+.wrap .post-meta li {
+	list-style: none;
+}
+
+.wrap .post-meta li a {
+	display: block;
+	color: hsla(0, 0%, 0%, 0.2);
+	color: color-mix(in oklch, CanvasText 20%, Canvas);
+	/* mix-blend-mode: multiply; */
+	text-decoration: none;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.wrap .post-meta li a:is(:hover, :focus) {
+	color: currentColor;
+}
+
+.wrap .post-meta li span.amount {
+	margin-inline-end: 0.25ch;
+}
+
+.wrap .post-meta li span.word { display: inline-block; text-indent: -9999px; }
+.wrap .post-meta li span.amount::after {
+	display: inline-block;
+	content: '';
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: contain;
+	vertical-align: middle;
+	margin-inline-start: 0.25ch;
+	opacity: 0.25;
+}
+
+.wrap .post-meta li a:is(:hover, :focus) span.amount::after {
+	opacity: 1;
+}
+
+.wrap .post-meta li.post-likes span.amount::after {
+	background-image: url(./icons/icon-like.svg);
+	width: 0.7rem;
+	height: 0.7rem;
+}
+
+.wrap .post-meta li.post-boosts span.amount::after {
+	background-image: url(./icons/icon-announce.svg);
+	width: 1rem;
+	height: 1rem;
+}
+
+.wrap .post-content {
+	font-size: 1.25rem;
+	overflow-wrap: break-word;
+	grid-column-start: span 6;
+}
+
+.wrap .post-content a {
+	color: var(--primary-color);
+	text-decoration: none;
+}
+
+.wrap form.delete {
+	width: 100%;
+	grid-column-start: span 6;
+	display: flex;
+	margin-block-start: 2rem;
+}
+
+.wrap form.delete input[type="submit"] {
+	flex: 1;
+	line-height: 1.4;
+	cursor: pointer;
+}
+
+.wrap .posts li .message {
+	width: 100%;
+	grid-column-start: span 6;
+	margin-block-start: 2rem;
+}
+
+.postform form,
+form.edit,
+.login form {
+	grid-column-start: span 6;
+	overflow: hidden;
+}
+
+:is(.postform, .edit) textarea {
+	width: 100%;
+	border: 2px solid CanvasText;
+	background: Canvas;
+	padding: 0.5rem;
+	font-size: 1.25rem;
+	resize: vertical;
+	min-height: 10rem;
+	margin-bottom: 0.5rem;
+}
+
+:is(.postform, .edit) textarea:focus {
+	border-color: var(--primary-color);
+	outline: none;
+}
+
+:is(.postform, .edit) .post-nav {
+	width: 100%;
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+:is(.postform, .edit) input[type="submit"],
+.login input[type="submit"] {
+	-webkit-appearance: none;
+	appearance: none;
+	border: 0;
+	display: block;
+	background: CanvasText;
+	color: Canvas;
+	text-decoration: none;
+	border-radius: 0.4rem;
+	padding: 0.3rem 0.8rem 0.4rem;
+	font-weight: bold;
+	text-align: center;
+	cursor: pointer;
+	float: right;
+}
+
+:is(.postform, .edit) #count {
+	color: CanvasText;
+}
+
+:is(.postform, .edit) #post-droparea {
+	border: 0.15rem dashed CanvasText;
+	color: CanvasText;
+	padding: 0.25rem;
+	cursor: pointer;
+}
+
+:is(.postform, .edit) #post-droparea.drag,
+:is(.postform, .edit) #post-droparea:is(:hover, :focus) {
+	background-color: var(--primary-color);
+	color: Canvas;
+	border: 0.15rem solid var(--primary-color);
+}
+
+:is(.postform, .edit) #post-attachments-label {
+	display: flex;
+	border: 0.15rem dashed rgba(0,0,0,0.4);
+	color: rgba(0,0,0,0.4);
+	padding: 0.25rem;
+	cursor: pointer;
+	position: relative;
+	align-self: stretch;
+	align-items: center;
+}
+
+:is(.postform, .edit) #post-attachments {
+	/* cover the entire label, for drag and drop */
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+}
+
+:is(.postform, .edit) #post-attachments-list {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	padding-inline-end: 1rem;
+	align-self: stretch;
+	justify-content: center;
+}
+
+:is(.postform, .edit) #post-attachments-list li + li {
+	margin-block-start: 0.25em;
+	border-top: 1px solid rgba(0,0,0,0.2);
+	padding-block-start: 0.25em;
+}
+
+:is(.postform, .edit) #post-attachments-list img.file-preview {
+	display: inline-block;
+	vertical-align: middle;
+	margin-right: 1ch;
+	width: 1.75rem;
+	height: 1.75rem;
+	outline: 0px solid #f0f;
+	object-fit: cover;
+	background: #fff;
+}
+
+:is(.postform, .edit) #post-attachments-list input[type="checkbox"] {
+	-webkit-appearance: checkbox;
+	appearance: checkbox;
+}
+
+:is(.timeline, .single) .post-attachments {
+	grid-column-start: span 6;
+	margin-block-start: 1rem;
+}
+
+:is(.timeline, .single) .post-attachments li + li {
+	margin-block-start: 0.5rem;
+}
+
+:is(.postform, .edit) .message,
+.login .message {
+	background-color: #87b26c;
+	padding: 0.5rem;
+	color: var(--secondary-color);
+	border-radius: 0.4rem;
+	margin-bottom: 0.5rem;
+}
+
+:is(.postform, .edit) .error,
+.login .error {
+	background-color: #9c2128;
+}
+
+.login input[type="text"],
+.login input[type="password"] {
+	width: 100%;
+	border: 2px solid var(--background-color);
+	background: Canvas;
+	padding: 0.5rem;
+	font-size: 1.25rem;
+	resize: vertical;
+	margin-bottom: 0.5rem;
+}
+
+.login input[type="text"]:focus,
+.login input[type="password"]:focus {
+	border-color: var(--primary-color);
+	outline: none;
+}
+
+footer {
+	width: min(95%, 40rem);
+	margin: 0.5rem auto 2rem;
+}
+
+footer ul {
+	list-style: none;
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
+}
+
+footer li a {
+	color: color-mix(in oklch, CanvasText 25%, Canvas);
+	text-decoration: none;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+/*
+@supports (background: paint(id)) {
+	input[type="submit"] {
+		background: paint(squircle) !important;
+		--squircle-radius: 8px;
+		--squircle-fill: var(--primary-color);
+
+		border-radius: 0;
+	}
+}
+*/

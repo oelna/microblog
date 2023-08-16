@@ -23,7 +23,7 @@
 	$title_suffix = '';
 	require(ROOT.DS.'snippets'.DS.'header.snippet.php');
 
-?><body>
+?><body ontouchstart="">
 	<div class="wrap">
 		<?php require(ROOT.DS.'snippets'.DS.'nav.snippet.php'); ?>
 		<ul class="posts">
@@ -46,10 +46,20 @@
 					<?php endif; ?>
 				</a>
 				<nav class="post-meta">
-					<?php if($config['logged_in']): ?><ul>
+					<ul>
+						<?php if($config['activitypub']):
+							// todo: is it possible to retrieve this at the same time as post data?
+							$post_stats = activitypub_get_post_stats('both', $post['id']); 
+						?>
+						<li class="post-likes"><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/likes" title="This post has been liked <?= $post_stats['like'] ?> times in the Fediverse"><span class="amount"><?= $post_stats['like'] ?></span><span class="word">Likes</span></a></li>
+						<li class="post-boosts"><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/boosts" title="This post has been announced <?= $post_stats['announce'] ?> times in the Fediverse"><span class="amount"><?= $post_stats['announce'] ?></span><span class="word">Boosts</span></a></li>
+						<?php endif; ?>
+
+						<?php if($config['logged_in']): ?>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/edit">Edit</a></li>
 						<li><a href="<?= $config['url'] ?>/<?= $post['id'] ?>/delete">Delete</a></li>
-					</ul><?php endif; ?>
+						<?php endif; ?>
+					</ul>
 				</nav>
 				<div class="post-content"><?= nl2br(autolink($post['post_content'])) ?></div>
 				<?php if(!empty($attachments) && !empty($attachments[$post['id']])): ?>

@@ -3,5 +3,5 @@ config.php
 feed.*
 feeds/
 files/
-keys/
+test.php
 log.txt

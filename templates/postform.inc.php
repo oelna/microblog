@@ -25,6 +25,8 @@
 			}
 
 			rebuild_feeds();
+
+			if($config['activitypub'] == true) activitypub_notify_followers($id);
 			if($config['ping'] == true) ping_microblog();
 			if($config['crosspost_to_twitter'] == true) {
 				$twitter_response = json_decode(twitter_post_status($_POST['content']), true);
@@ -42,7 +44,7 @@
 	$title_suffix = 'new post';
 	require(ROOT.DS.'snippets'.DS.'header.snippet.php');
 
-?><body>
+?><body ontouchstart="">
 	<div class="wrap">
 		<?php require(ROOT.DS.'snippets'.DS.'nav.snippet.php'); ?>
 		<?php if(isset($message['status']) && isset($message['message'])): ?>

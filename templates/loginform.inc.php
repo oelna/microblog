@@ -21,7 +21,7 @@
 	$title_suffix = 'login';
 	require(ROOT.DS.'snippets'.DS.'header.snippet.php');
 
-?><body>
+?><body ontouchstart="">
 	<div class="wrap">
 		<?php require(ROOT.DS.'snippets'.DS.'nav.snippet.php'); ?>
 		<p>Please enter your login information.</p>
