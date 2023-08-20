@@ -349,6 +349,7 @@ function mw_new_post($method_name, $args) {
 
 		// success
 		rebuild_feeds();
+		if($config['activitypub'] == true) activitypub_notify_followers($insert_id);
 
 		return (int) $insert_id;
 	} else {
@@ -478,6 +479,7 @@ var_dump($image_urls);
 	if($update && $update > 0) {
 		// success
 		rebuild_feeds();
+		// todo: does this have to notify activitypub followers too?
 
 		return true;
 	} else {
@@ -507,6 +509,7 @@ function mw_delete_post($method_name, $args) {
 	$success = db_delete($post_id);
 	if($success > 0) {
 		rebuild_feeds();
+		// todo: does this have to notify activitypub followers too?
 
 		return true;
 	} else {
