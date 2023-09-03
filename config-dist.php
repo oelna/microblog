@@ -52,6 +52,6 @@ $config['xmlrpc'] = function_exists('xmlrpc_server_create');
 $config['local_time_offset'] = date('P');
 
 // load functions
-require_once(ROOT.DS.'database.php');
-require_once(ROOT.DS.'functions.php');
-require_once(ROOT.DS.'lib_autolink.php');
+require_once(ROOT.DS.'lib'.DS.'database.php');
+require_once(ROOT.DS.'lib'.DS.'functions.php');
+require_once(ROOT.DS.'lib'.DS.'autolink.php');
