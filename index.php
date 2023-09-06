@@ -25,7 +25,8 @@
 				require_once(ROOT.DS.'templates'.DS.'loginform.inc.php');
 				break;
 			case 'logout':
-				$domain = ($_SERVER['SERVER_NAME'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+				$host = get_host(false); // cookies are port-agnostic
+				$domain = ($host != 'localhost') ? $host : false;
 				setcookie('microblog_login', '', time()-3600, '/', $domain, false);
 				unset($_COOKIE['microblog_login']);
 
