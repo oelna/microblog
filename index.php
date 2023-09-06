@@ -25,7 +25,7 @@
 				require_once(ROOT.DS.'templates'.DS.'loginform.inc.php');
 				break;
 			case 'logout':
-				$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+				$domain = ($_SERVER['SERVER_NAME'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
 				setcookie('microblog_login', '', time()-3600, '/', $domain, false);
 				unset($_COOKIE['microblog_login']);
 
@@ -49,19 +49,6 @@
 					die();
 				}
 				break;
-			/*
-			case 'webfinger':
-				die('aaaa');
-				if(!empty(path(1)) && path(1) == 'webfinger') {
-					require_once(ROOT.DS.'lib'.DS.'activitypub-webfinger.php');
-				} else {
-					die('xxx');
-					http_response_code(404);
-					die();
-				}
-				die('abc');
-				break;
-			*/
 			case 'actor':
 				require_once(ROOT.DS.'lib'.DS.'activitypub-actor.php');
 				break;

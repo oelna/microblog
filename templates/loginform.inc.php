@@ -4,7 +4,8 @@
 	// handle login
 	if(isset($_POST['user']) && isset($_POST['pass'])) {
 		if($_POST['user'] === $config['admin_user'] && $_POST['pass'] === $config['admin_pass']) {
-			$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+			$host = get_host(false); // cookies are port-agnostic
+			$domain = ($host != 'localhost') ? $host : false;
 			setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
 
 			header('Location: '.$config['url']);

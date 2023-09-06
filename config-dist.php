@@ -20,7 +20,7 @@ if(mb_strlen($path[0]) == 0) { $path = []; }
 
 // (mostly) user settings
 $config = array(
-	'url' => 'http'.(!empty($_SERVER['HTTPS']) ? 's' : '').'://'.$_SERVER['SERVER_NAME'].dirname($_SERVER['SCRIPT_NAME']),
+	'url' => 'http'.(!empty($_SERVER['HTTPS']) ? 's' : '').'://'.$_SERVER['HTTP_HOST'].dirname($_SERVER['SCRIPT_NAME']),
 	'path' => $path,
 	'language' => 'en',
 	'max_characters' => 280,

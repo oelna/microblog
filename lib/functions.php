@@ -6,13 +6,26 @@ function path($fragment=null) {
 	return (!empty($config['path'][$fragment])) ? $config['path'][$fragment] : false;
 }
 
+function get_host($preserve_port=false) {
+	/* this makes a SERVER_NAME out of HTTP_HOST */
+
+	$parsed = parse_url('http://'.$_SERVER['HTTP_HOST']); // scheme is only required for the parser
+
+	if(!$preserve_port || empty($parsed['port'])) {
+		return $parsed['host'];
+	} else {
+		return $parsed['host'].':'.$parsed['port'];
+	}
+}
+
 function check_login() {
 	global $config;
 
 	if(isset($_COOKIE['microblog_login'])) {
 		if($_COOKIE['microblog_login'] === sha1($config['url'].$config['admin_pass'])) {
 			// correct auth data, extend cookie life
-			$domain = ($_SERVER['HTTP_HOST'] != 'localhost') ? $_SERVER['HTTP_HOST'] : false;
+			$host = get_host(false); // cookies are port-agnostic
+			$domain = ($host != 'localhost') ? $host : false;
 			setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
 
 			return true;
