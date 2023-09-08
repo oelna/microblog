@@ -35,6 +35,13 @@
 	}
 	*/
 
+	$profile_image = $config['url'].'/favicon-large.png';
+	$profile_image_type = 'image/png';
+	if(!empty($config['site_image'])) {
+		$profile_image = $config['site_image'];
+		$profile_image_type = image_type_to_mime_type(exif_imagetype($profile_image));
+	}
+
 	if(strpos($_SERVER['HTTP_ACCEPT'], 'application/activity+json') !== false):
 
 		header('Content-Type: application/ld+json');
@@ -53,8 +60,8 @@
 	"discoverable": true,
 	"publishedDate": "2023-01-01T00:00:00Z",
 	"icon": {
-		"url": "<?= $config['url'] ?>/favicon-large.png",
-		"mediaType": "image/png",
+		"url": "<?= $profile_image ?>",
+		"mediaType": "<?= $profile_image_type ?>",
 		"type": "Image"
 	},
 	"inbox": "<?= $config['url'] ?>/inbox",

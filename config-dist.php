@@ -48,6 +48,7 @@ $config = array(
 
 unset($dir, $uri, $path_fragments, $path);
 
+$config['site_image'] = $config['url'].'/favicon-large.png'; // (absolute) URL that is used as profile picture for the ActivityPub actor
 $config['xmlrpc'] = function_exists('xmlrpc_server_create');
 $config['local_time_offset'] = date('P');
 
