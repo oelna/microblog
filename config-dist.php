@@ -2,6 +2,16 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+/*
+PLEASE NOTE THAT AS OF RELEASE 2.1
+THERE IS NO CONFIGURATION TO BE MADE
+IN THIS FILE. PLEASE USE the /settings
+PAGE TO CONFIGURE YOUR MICROBLOG.
+
+THE CONFIG FILE MAY GO AWAY IN THE
+FUTURE.
+*/
+
 DEFINE('ROOT', __DIR__);
 DEFINE('DS', DIRECTORY_SEPARATOR);
 DEFINE('NL', "\n");
@@ -9,6 +19,9 @@ DEFINE('BR', "<br />");
 DEFINE('NOW', time());
 
 date_default_timezone_set('Europe/Berlin');
+
+// set up database connection
+require_once(ROOT.DS.'lib'.DS.'database.php');
 
 /* make the path easier to read */
 $dir = dirname($_SERVER['SCRIPT_NAME']);
@@ -18,41 +31,48 @@ $path_fragments = parse_url($uri, PHP_URL_PATH);
 $path = (empty($path_fragments)) ? [''] : explode('/', trim($path_fragments, '/'));
 if(mb_strlen($path[0]) == 0) { $path = []; }
 
-// (mostly) user settings
-$config = array(
-	'url' => 'http'.(!empty($_SERVER['HTTPS']) ? 's' : '').'://'.$_SERVER['HTTP_HOST'].dirname($_SERVER['SCRIPT_NAME']),
-	'path' => $path,
+// load settings
+$statement = $db->prepare('SELECT * FROM settings');
+$statement->execute();
+$settings_raw = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+if(!empty($settings_raw)) {
+	// create config array
+	$settings = array_column($settings_raw, 'settings_value', 'settings_key');
+} else {
+	// there were no settings in the DB. initialize!
+	$settings = [];
+}
+
+$default_settings = array(
+	'url' => '',
+	'path' => __DIR__,
 	'language' => 'en',
 	'max_characters' => 280,
 	'posts_per_page' => 10,
-	'theme' => 'microblog', // filename of the CSS to use
-	'microblog_account' => '@username', // fill in a @username if you like (is also the ActivityPub actor preferredUsername)
-	'site_title' => "username's Microblog", // is also the ActivityPub actor name
-	'site_claim' => "This is an automated account. Don't mention or reply please.", // is also the ActivityPub actor summary
+	'theme' => 'plain',
+	'microblog_account' => '',
+	'site_title' => 'Another Microblog',
+	'site_claim' => 'This is an automated account. Don\'t mention or reply please.',
 	'admin_user' => 'admin',
-	'admin_pass' => 'dove-life-bird-lust',
-	'app_token' => '3e83b13d99bf0de6c6bde5ac5ca4ae687a3d46db', // random secret used as auth with XMLRPC
-	'cookie_life' => 60*60*24*7*4, // cookie life in seconds
-	'ping' => true, // enable automatic pinging of the micro.blog service
+	'admin_pass' => '',
+	'app_token' => '',
+	'cookie_life' => 60*60*24*7*4,
+	'ping' => true,
 	'activitypub' => true,
-	'crosspost_to_twitter' => false, // set this to true to automatically crosspost to a twitter account (requires app credentials, see below)
-	'twitter' => array( // get your tokens over at https://dev.twitter.com/apps
-		'oauth_access_token' => '',
-		'oauth_access_token_secret' => '',
-		'consumer_key' => '',
-		'consumer_secret' => ''
-	),
-	'show_edits' => true, // displays the modification time of posts
-	'subdir_install' => ($dir === '/') ? false : true,
+	'show_edits' => true
 );
 
-unset($dir, $uri, $path_fragments, $path);
-
-$config['site_image'] = $config['url'].'/favicon-large.png'; // (absolute) URL that is used as profile picture for the ActivityPub actor
+$old_config = $config ?? [];
+$config = $settings;
+$config['path'] = $path;
+$config['url_detected'] = 'http'.(!empty($_SERVER['HTTPS']) ? 's' : '').'://'.$_SERVER['HTTP_HOST'].rtrim($dir, '/');
+$config['subdir_install'] = ($dir === '/') ? false : true;
 $config['xmlrpc'] = function_exists('xmlrpc_server_create');
 $config['local_time_offset'] = date('P');
 
+unset($dir, $uri, $path_fragments, $path);
+
 // load functions
-require_once(ROOT.DS.'lib'.DS.'database.php');
 require_once(ROOT.DS.'lib'.DS.'functions.php');
 require_once(ROOT.DS.'lib'.DS.'autolink.php');

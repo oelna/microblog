@@ -3,10 +3,11 @@
 
 	// handle login
 	if(isset($_POST['user']) && isset($_POST['pass'])) {
-		if($_POST['user'] === $config['admin_user'] && $_POST['pass'] === $config['admin_pass']) {
+		if($_POST['user'] === $config['admin_user'] && password_verify($_POST['pass'], $config['admin_pass'])) {
 			$host = get_host(false); // cookies are port-agnostic
 			$domain = ($host != 'localhost') ? $host : false;
-			setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
+			$hash = hash('sha256', $config['installation_signature']);
+			setcookie('microblog_login', $hash, NOW+$config['cookie_life'], '/', $domain, false);
 
 			header('Location: '.$config['url']);
 			die();

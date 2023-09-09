@@ -21,12 +21,14 @@ function get_host($preserve_port=false) {
 function check_login() {
 	global $config;
 
+	// todo: improve this https://fishbowl.pastiche.org/2004/01/19/persistent_login_cookie_best_practice
 	if(isset($_COOKIE['microblog_login'])) {
-		if($_COOKIE['microblog_login'] === sha1($config['url'].$config['admin_pass'])) {
+		$hash = hash('sha256', $config['installation_signature']);
+		if($_COOKIE['microblog_login'] === $hash) {
 			// correct auth data, extend cookie life
 			$host = get_host(false); // cookies are port-agnostic
 			$domain = ($host != 'localhost') ? $host : false;
-			setcookie('microblog_login', sha1($config['url'].$config['admin_pass']), NOW+$config['cookie_life'], '/', $domain, false);
+			setcookie('microblog_login', $hash, NOW+$config['cookie_life'], '/', $domain, false);
 
 			return true;
 		} else {
@@ -37,6 +39,17 @@ function check_login() {
 	}
 
 	return false;
+}
+
+function suggest_password($strength=4, $delimiter='-') {
+	if($dict_raw = @file_get_contents(ROOT.DS.'lib'.DS.'password-dict.txt')) {
+		$dict = explode(',', $dict_raw);
+	} else {
+		return 'unable-to-generate-password!';
+	}
+
+	$password = array_rand(array_flip($dict), $strength);
+	return implode($delimiter, $password);
 }
 
 function db_insert($content, $timestamp=NOW) {

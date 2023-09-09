@@ -369,6 +369,53 @@ form.edit,
 	outline: none;
 }
 
+.settings .post-nav {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.settings fieldset {
+	margin-block: 1rem 2rem;
+}
+
+.settings fieldset legend {
+	text-transform: uppercase;
+	font-weight: 700;
+	font-size: 85%;
+	margin-block-end: 1rem;
+}
+
+.settings fieldset dl {
+	display: grid;
+	grid-template-columns: 2fr 3fr;
+	grid-gap: 1.25rem 0;
+}
+
+.settings fieldset :is(dt, dd) {
+	padding: 0.25em 0.5rem 0.25em 0;
+	border-bottom: 0px solid CanvasText;
+	outline: 0px solid red;
+}
+
+.settings fieldset dt label {
+	font-size: 85%;
+}
+
+.settings fieldset dd :is(select, input[type="radio"], input[type="checkbox"]) {
+	all: revert;
+	font-size: 1rem;
+}
+
+.settings fieldset dd :is(input[type="text"], textarea) {
+	width: 100%;
+	padding: 0.25em 0.5em;
+	border-bottom: 1px solid #aaa;
+}
+
+.settings fieldset dd :is(input, textarea)::placeholder {
+	opacity: 0.4;
+}
+
 footer {
 	width: min(95%, 40rem);
 	margin: 0.5rem auto 2rem;

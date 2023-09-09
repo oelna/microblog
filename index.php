@@ -1,5 +1,20 @@
 <?php
-	require_once(__DIR__.DIRECTORY_SEPARATOR.'config.php');
+	$config_file = __DIR__.DIRECTORY_SEPARATOR.'config.php';
+	$config_file_default = __DIR__.DIRECTORY_SEPARATOR.'config-dist.php';
+	if(!include_once($config_file)) {
+		if(file_exists($config_file_default)) {
+			copy($config_file_default, $config_file);
+			chmod($config_file, 0644);
+			header('Refresh:1');
+			exit();
+		}
+	}
+
+	if(count($settings) <= 1 && path(0) !== 'settings') {
+		// first time setup
+		header('Location: '.$config['url_detected'].'/settings');
+		die();
+	}
 
 	// check user credentials
 	$config['logged_in'] = check_login();
@@ -15,9 +30,6 @@
 
 	} else {
 		$page = mb_strtolower(path(0));
-
-		// why?
-		// if($page == '.well_known' && path(1) == 'webfinger') { $page = 'webfinger'; }
 
 		switch($page) {
 			case 'login':
@@ -35,6 +47,10 @@
 			case 'new':
 				$template = 'postform';
 				require_once(ROOT.DS.'templates'.DS.'postform.inc.php');
+				break;
+			case 'settings':
+				$template = 'settings';
+				require_once(ROOT.DS.'templates'.DS.'settings.inc.php');
 				break;
 			case 'rsd':
 				require_once(ROOT.DS.'lib'.DS.'rsd.xml.php');

@@ -15,10 +15,12 @@
 
 	// get posts
 	$posts = db_select_posts(NOW, $config['posts_per_page'], 'desc', $offset);
+	/* // why was this ever here??
 	if(empty($posts)) {
 		header('Location: '.$config['url']);
 		die();
 	}
+	*/
 
 	$title_suffix = '';
 	require(ROOT.DS.'snippets'.DS.'header.snippet.php');

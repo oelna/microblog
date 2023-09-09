@@ -1,19 +1,21 @@
 <?php
 
+$db_version = 0;
+
 //connect or create the database
 try {
 	$db = new PDO('sqlite:'.ROOT.DS.'posts.db');
 	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 
-	$config['db_version'] = $db->query("PRAGMA user_version")->fetch(PDO::FETCH_ASSOC)['user_version'];
+	$db_version = $db->query("PRAGMA user_version")->fetch(PDO::FETCH_ASSOC)['user_version'];
 } catch(PDOException $e) {
 	print 'Exception : '.$e->getMessage();
 	die('cannot connect to or open the database');
 }
 
 // first time setup
-if($config['db_version'] == 0) {
+if($db_version == 0) {
 	try {
 		$db->exec("PRAGMA `user_version` = 1;
 			CREATE TABLE IF NOT EXISTS `posts` (
@@ -21,7 +23,7 @@ if($config['db_version'] == 0) {
 			`post_content` TEXT,
 			`post_timestamp` INTEGER
 		);");
-		$config['db_version'] = 1;
+		$db_version = 1;
 	} catch(PDOException $e) {
 		print 'Exception : '.$e->getMessage();
 		die('cannot set up initial database table!');
@@ -29,14 +31,14 @@ if($config['db_version'] == 0) {
 }
 
 // upgrade database to v2
-if($config['db_version'] == 1) {
+if($db_version == 1) {
 	try {
 		$db->exec("PRAGMA `user_version` = 2;
 			ALTER TABLE `posts` ADD `post_thread` INTEGER;
 			ALTER TABLE `posts` ADD `post_edited` INTEGER;
 			ALTER TABLE `posts` ADD `post_deleted` INTEGER;
 		");
-		$config['db_version'] = 2;
+		$db_version = 2;
 	} catch(PDOException $e) {
 		print 'Exception : '.$e->getMessage();
 		die('cannot upgrade database table to v2!');
@@ -44,12 +46,12 @@ if($config['db_version'] == 1) {
 }
 
 // upgrade database to v3
-if($config['db_version'] == 2) {
+if($db_version == 2) {
 	try {
 		$db->exec("PRAGMA `user_version` = 3;
 			ALTER TABLE `posts` ADD `post_guid` TEXT;
 		");
-		$config['db_version'] = 3;
+		$db_version = 3;
 	} catch(PDOException $e) {
 		print 'Exception : '.$e->getMessage();
 		die('cannot upgrade database table to v3!');
@@ -57,7 +59,7 @@ if($config['db_version'] == 2) {
 }
 
 // upgrade database to v4
-if($config['db_version'] == 3) {
+if($db_version == 3) {
 	try {
 		$db->exec("PRAGMA `user_version` = 4;
 				CREATE TABLE `files` (
@@ -86,7 +88,7 @@ if($config['db_version'] == 3) {
 			CREATE INDEX `link_deleted` ON file_to_post (`deleted`);
 			CREATE UNIQUE INDEX `files_hashes` ON files (`file_hash`);
 		");
-		$config['db_version'] = 4;
+		$db_version = 4;
 	} catch(PDOException $e) {
 		print 'Exception : '.$e->getMessage();
 		die('cannot upgrade database table to v4!');
@@ -94,7 +96,7 @@ if($config['db_version'] == 3) {
 }
 
 // v5, update for activitypub
-if($config['db_version'] == 4) {
+if($db_version == 4) {
 	try {
 		$db->exec("PRAGMA `user_version` = 5;
 			CREATE TABLE IF NOT EXISTS `followers` (
@@ -109,7 +111,7 @@ if($config['db_version'] == 4) {
 			CREATE UNIQUE INDEX `followers_users` ON followers (`follower_name`, `follower_host`);
 			CREATE INDEX `followers_shared_inboxes` ON followers (`follower_shared_inbox`);
 		");
-		$config['db_version'] = 5;
+		$db_version = 5;
 	} catch(PDOException $e) {
 		print 'Exception : '.$e->getMessage();
 		die('cannot upgrade database table to v5!');
@@ -117,7 +119,7 @@ if($config['db_version'] == 4) {
 }
 
 // v6, update for activitypub likes and announces
-if($config['db_version'] == 5) {
+if($db_version == 5) {
 	try {
 		$db->exec("PRAGMA `user_version` = 6;
 			CREATE TABLE IF NOT EXISTS `activities` (
@@ -131,7 +133,7 @@ if($config['db_version'] == 5) {
 			CREATE INDEX `activities_objects` ON activities (`activity_object_id`);
 			CREATE UNIQUE INDEX `activities_unique` ON activities (`activity_actor_name`, `activity_actor_host`, `activity_type`, `activity_object_id`);
 		");
-		$config['db_version'] = 6;
+		$db_version = 6;
 	} catch(PDOException $e) {
 		print 'Exception : '.$e->getMessage();
 		die('cannot upgrade database table to v6!');
@@ -139,9 +141,9 @@ if($config['db_version'] == 5) {
 }
 
 // v7, update for activitypub key storage
-if($config['db_version'] == 6) {
+if($db_version == 6) {
 	try {
-		$db->exec("PRAGMA `user_version` = 6;
+		$db->exec("PRAGMA `user_version` = 7;
 			CREATE TABLE IF NOT EXISTS `keys` (
 				`id` INTEGER PRIMARY KEY NOT NULL,
 				`key_private` TEXT NOT NULL,
@@ -152,10 +154,32 @@ if($config['db_version'] == 6) {
 				`key_created` INTEGER
 			);
 		");
-		$config['db_version'] = 7;
+		$db_version = 7;
 	} catch(PDOException $e) {
 		print 'Exception : '.$e->getMessage();
 		die('cannot upgrade database table to v7!');
+	}
+}
+
+// v8, update for config/settings key/value storage
+if($db_version == 7) {
+	try {
+		$db_version += 1;
+		$install_signature = bin2hex(random_bytes(16));
+		$db->exec("PRAGMA `user_version` = ".$db_version.";
+			CREATE TABLE IF NOT EXISTS `settings` (
+				`id` INTEGER PRIMARY KEY NOT NULL,
+				`settings_key` TEXT NOT NULL UNIQUE,
+				`settings_value` TEXT,
+				`settings_value_previous` TEXT,
+				`settings_updated` INTEGER
+			);
+			CREATE UNIQUE INDEX `settings_keys` ON settings (`settings_key`);
+			INSERT INTO `settings` (settings_key, settings_value, settings_updated) VALUES ('installation_signature', '".$install_signature."', ".NOW.");
+		");
+	} catch(PDOException $e) {
+		print 'Exception : '.$e->getMessage();
+		die('cannot upgrade database table to v'.$db_version.'!');
 	}
 }
 
