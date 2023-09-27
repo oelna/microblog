@@ -18,13 +18,13 @@ function get_host($preserve_port=false) {
 	}
 }
 
-function check_login() {
+function check_login($force_login=false) {
 	global $config;
 
 	// todo: improve this https://fishbowl.pastiche.org/2004/01/19/persistent_login_cookie_best_practice
-	if(isset($_COOKIE['microblog_login'])) {
+	if(isset($_COOKIE['microblog_login']) || $force_login == true) {
 		$hash = hash('sha256', $config['installation_signature']);
-		if($_COOKIE['microblog_login'] === $hash) {
+		if($_COOKIE['microblog_login'] === $hash || $force_login == true) {
 			// correct auth data, extend cookie life
 			$host = get_host(false); // cookies are port-agnostic
 			$domain = ($host != 'localhost') ? $host : false;
@@ -122,6 +122,38 @@ function db_select_post($id=0) {
 	$row = $statement->fetch(PDO::FETCH_ASSOC);
 
 	return (!empty($row)) ? $row : false;
+}
+
+function db_get_setting($key) {
+	global $db;
+	if(empty($db) || empty($key)) return false;
+
+	$statement = $db->prepare('SELECT * FROM settings WHERE settings_key = :skey LIMIT 1');
+	$statement->bindValue(':skey', $key, PDO::PARAM_STR);
+	$statement->execute();
+	$row = $statement->fetch(PDO::FETCH_ASSOC);
+
+	return (!empty($row)) ? $row['settings_value'] : false;
+}
+
+function db_set_setting($key, $value) {
+	global $db;
+	if(empty($db) || empty($key)) return false;
+
+	try {
+		$statement = $db->prepare('INSERT OR REPLACE INTO settings (settings_key, settings_value, settings_updated) VALUES (:skey, :svalue, :supdated)');
+
+		$statement->bindValue(':skey', $key, PDO::PARAM_STR);
+		$statement->bindValue(':svalue', $value, PDO::PARAM_STR);
+		$statement->bindValue(':supdated', time(), PDO::PARAM_INT);
+
+		$statement->execute();
+	} catch(PDOException $e) {
+		// print 'Exception : '.$e->getMessage();
+		return false;
+	}
+
+	return true;
 }
 
 function db_get_attached_files($post_ids=[], $include_deleted=false) {

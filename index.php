@@ -58,6 +58,9 @@
 			case 'xmlrpc':
 				require_once(ROOT.DS.'lib'.DS.'xmlrpc.php');
 				break;
+			case 'pk':
+				require_once(ROOT.DS.'lib'.DS.'passkeys.php');
+				break;
 			case '.well-known':
 				if(!empty(path(1)) && path(1) == 'webfinger') {
 					require_once(ROOT.DS.'lib'.DS.'activitypub-webfinger.php');
@@ -77,6 +80,51 @@
 				break;
 			case 'inbox':
 				require_once(ROOT.DS.'lib'.DS.'activitypub-inbox.php');
+				break;
+			case 'recovery':
+				// password recovery via email
+				if(!empty($config['admin_email'])) {
+
+					if(!empty(path(1))) {
+						// get magic link
+						$bytes = db_get_setting('magic_url');
+						if(empty($bytes)) exit('Invalid URL');
+
+						// validate
+						if(path(1) === $bytes) {
+							$config['logged_in'] = check_login(true); // force entry!
+
+							header('Location: '.$config['url'].'/settings');
+							exit();
+						} else {
+							exit('Invalid URL');
+						}
+					} else {
+						// send a recovery email with link
+						$bytes = bin2hex(random_bytes(16));
+						$magic_link = $config['url'].'/recovery/'.$bytes;
+
+						db_set_setting('magic_url', $bytes);
+
+						$mailtext  = 'Your recovery link for Microblog:'.NL;
+						$mailtext .= $magic_link.NL;
+
+						$host = parse_url($config['url'], PHP_URL_HOST);
+						$headers = array(
+							'From' => 'admin@'.$host,
+							'Reply-To' => 'admin@'.$host,
+							'X-Mailer' => 'PHP/' . phpversion()
+						);
+
+						if(mail(trim($config['admin_email']), 'Your Microblog recovery link', $mailtext, $headers)) {
+							// var_dump($mailtext);
+							header('Location: '.$config['url'].'/login/recovery');
+						} else {
+							exit('Could not send email with recovery link!');
+						}
+					}
+				}
+
 				break;
 			default:
 				// redirect everything else to the homepage
