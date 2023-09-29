@@ -1,16 +1,17 @@
 <?php
 	if(!defined('ROOT')) die('Don\'t call this directly.');
 
-	if(count($settings) > 1 && !$config['logged_in']) {
+	if(!$is_setup && !$config['logged_in']) {
 		// wrong data, kick user to login page
 		header('HTTP/1.0 401 Unauthorized');
 		header('Location: '.$config['url'].'/login');
 		die();
 	}
 
-	$is_setup = false;
-	if(count($settings) <= 1) {
-		$is_setup = true;
+	if($is_setup) {
+		// allow the user in
+		$config['logged_in'] = check_login(true);
+
 		$settings = array_merge($default_settings, $old_config); // respect existing config file
 
 		// generate some values
@@ -80,6 +81,8 @@
 			<?php if($is_setup): ?><p class="message">First time setup! Please make sure to choose a password!</p><?php endif; ?>
 			<fieldset>
 				<legend>General</legend>
+
+				<?php if($is_setup): ?><input name="s[do_setup]" type="hidden" value="0" /><?php endif; ?>
 
 				<dl>
 					<dt><label for="s-url">URL</label></dt>

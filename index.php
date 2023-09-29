@@ -10,7 +10,10 @@
 		}
 	}
 
-	if(count($settings) <= 1 && path(0) !== 'settings') {
+	// check if we are running for the first time
+	$is_setup = (isset($settings) && !empty($settings['do_setup']) && $settings['do_setup'] == 1) ? true : false;
+
+	if($is_setup && path(0) !== 'settings') {
 		// first time setup
 		header('Location: '.$config['url_detected'].'/settings');
 		die();

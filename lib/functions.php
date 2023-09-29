@@ -21,6 +21,8 @@ function get_host($preserve_port=false) {
 function check_login($force_login=false) {
 	global $config;
 
+	$cookie_life = !empty($config['cookie_life']) ? $config['cookie_life'] : 3600;
+
 	// todo: improve this https://fishbowl.pastiche.org/2004/01/19/persistent_login_cookie_best_practice
 	if(isset($_COOKIE['microblog_login']) || $force_login == true) {
 		$hash = hash('sha256', $config['installation_signature']);
@@ -28,13 +30,13 @@ function check_login($force_login=false) {
 			// correct auth data, extend cookie life
 			$host = get_host(false); // cookies are port-agnostic
 			$domain = ($host != 'localhost') ? $host : false;
-			setcookie('microblog_login', $hash, NOW+$config['cookie_life'], '/', $domain, false);
+			setcookie('microblog_login', $hash, NOW+$cookie_life, '/', $domain, false);
 
 			return true;
 		} else {
 			// invalid cookie data
 			unset($_COOKIE['microblog_login']);
-			setcookie('microblog_login', '', time()-3600, '/', false, false);
+			setcookie('microblog_login', '', NOW-3600, '/', false, false);
 		}
 	}
 

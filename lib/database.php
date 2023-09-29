@@ -176,6 +176,7 @@ if($db_version == 7) {
 			);
 			CREATE UNIQUE INDEX `settings_keys` ON settings (`settings_key`);
 			INSERT INTO `settings` (settings_key, settings_value, settings_updated) VALUES ('installation_signature', '".$install_signature."', ".NOW.");
+			INSERT INTO `settings` (settings_key, settings_value, settings_updated) VALUES ('do_setup', '1', ".NOW.");
 			INSERT INTO `settings` (settings_key, settings_value, settings_updated) VALUES ('passkey', '', ".NOW.");
 		");
 	} catch(PDOException $e) {
