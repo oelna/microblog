@@ -352,6 +352,10 @@ form.edit,
 	background-color: #9c2128;
 }
 
+.login form {
+	margin-top: 0.75rem;
+}
+
 .login input[type="text"],
 .login input[type="password"] {
 	width: 100%;
@@ -361,6 +365,19 @@ form.edit,
 	font-size: 1.25rem;
 	resize: vertical;
 	margin-bottom: 0.5rem;
+}
+
+
+.login .login-nav {
+	display: flex;
+	gap: 1rem;
+	flex-direction: row-reverse;
+	justify-content: end;
+	align-items: center;
+}
+
+.login input[type="submit"] {
+	float: none;
 }
 
 .login input[type="text"]:focus,
