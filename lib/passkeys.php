@@ -1,13 +1,31 @@
 <?php
 
+// PASSKEY MODULE FOR MICROBLOG
+
+// a lot of the following code has been taken from
+// https://github.com/craigfrancis/webauthn-tidy (BSD 3)
+// Copyright 2020 Craig Francis
+// with modifications by Arno Richter in 2023
+// for his Microblog software
+
 $host = parse_url($config['url'], PHP_URL_HOST);
-$uri = ($_SERVER['REQUEST_URI'] ?? '');
 $origin = $config['url'];
 $algorithm = -7; // Elliptic curve algorithm ECDSA with SHA-256
 
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+$action = !empty($_GET['q']) ? mb_strtolower(trim($_GET['q'])) : path(1);
 
 session_start();
+header('Content-Type: application/json; charset=utf-8');
+
+// only support the specified actions
+if(!in_array($action, ['create', 'store', 'login', 'verify', 'revoke'])) {
+	echo(json_encode([
+		'result' => -2,
+		'errors' => ['Method not supported']
+	]));
+	exit();
+}
 
 // Challenge
 if ($method == 'GET') {
@@ -15,16 +33,19 @@ if ($method == 'GET') {
 }
 $challenge = ($_SESSION['challenge'] ?? '');
 
-
 // If submitted
 $errors = [];
-if (isset($_GET['q']) && $_GET['q'] == 'store') {
+if ($action == 'store') {
+	if(!$config['logged_in']) {
+		header('HTTP/1.0 401 Unauthorized');
+		echo(json_encode(['errors' => ['Unauthorized access!']]));
+		exit();
+	}	
 
 	$data = file_get_contents('php://input');
 	if(empty($data)) exit('{}');
-	//--------------------------------------------------
-	// Parse
 
+	// Parse
 	$webauthn_data = json_decode($data, true);
 
 	// Client data
@@ -35,9 +56,9 @@ if (isset($_GET['q']) && $_GET['q'] == 'store') {
 	$auth_data = base64_decode($webauthn_data['response']['authenticatorData']);
 
 	$auth_data_relying_party_id = substr($auth_data, 0, 32); // rpIdHash
-	$auth_data_flags            = substr($auth_data, 32, 1);
-	$auth_data_sign_count       = substr($auth_data, 33, 4);
-	$auth_data_sign_count       = intval(implode('', unpack('N*', $auth_data_sign_count))); // 32-bit unsigned big-endian integer
+	$auth_data_flags = substr($auth_data, 32, 1);
+	$auth_data_sign_count = substr($auth_data, 33, 4);
+	$auth_data_sign_count = intval(implode('', unpack('N*', $auth_data_sign_count))); // 32-bit unsigned big-endian integer
 
 	// Checks basic
 	if (($webauthn_data['type'] ?? '') !== 'public-key') {
@@ -68,7 +89,6 @@ if (isset($_GET['q']) && $_GET['q'] == 'store') {
 
 	// Only use $challenge check for attestation
 
-
 	// Get public key
 	$key_der = ($webauthn_data['response']['publicKey'] ?? NULL);
 	if (!$key_der) {
@@ -82,13 +102,7 @@ if (isset($_GET['q']) && $_GET['q'] == 'store') {
 	// Store
 	if (count($errors) == 0) {
 
-		/*
-		$_SESSION['webauthn_data_create'] = $webauthn_data; // Only for debugging.
-		$_SESSION['user_key_id'] = $webauthn_data['id'];
-		$_SESSION['user_key_value'] = $key_der;
-
-		file_put_contents(ROOT.DS.'pk-log.txt', json_encode([$key_der, $webauthn_data]));
-		*/
+		//file_put_contents(ROOT.DS.'pk-log.txt', json_encode([$key_der, $webauthn_data]));
 
 		try {
 			$statement = $db->prepare('INSERT OR REPLACE INTO settings (settings_key, settings_value, settings_updated) VALUES (:settings_key, :settings_value, :settings_updated)');
@@ -107,7 +121,6 @@ if (isset($_GET['q']) && $_GET['q'] == 'store') {
 	}
 
 	// Show errors
-	header('Content-Type: application/json; charset=utf-8');
 	echo(json_encode([
 		'result' => $id,
 		'errors' => $errors
@@ -116,14 +129,14 @@ if (isset($_GET['q']) && $_GET['q'] == 'store') {
 }
 
 // Request
-if(isset($_GET['q']) && $_GET['q'] == 'create') {
+if($action == 'create') {
 
 	$request = [
 		'publicKey' => [
 			'rp' => [
 				'name' => 'Microblog',
 				'id' => $host,
-				// 'icon' => 'https://example.com/login.png',
+				'icon' => $config['url'].'/favicon-large.png' // is this real?
 			],
 			'user' => [
 				'id' => 1,
@@ -141,8 +154,8 @@ if(isset($_GET['q']) && $_GET['q'] == 'create') {
 				'authenticatorAttachment' => 'platform' // platform, cross-platform
 			],
 			'timeout' => 60000, // In milliseconds
-			'attestation' => 'none', // Other options include "direct" and "indirect"
-			'excludeCredentials' => [ // Avoid creating new public key credentials (e.g. existing user who has already setup WebAuthn).
+			'attestation' => 'none', // "none", "direct", "indirect"
+			'excludeCredentials' => [ // Avoid creating new public key credentials (e.g. existing user who has already setup WebAuthn). This is filled in L170+
 				/*
 				[
 					'type' => "public-key",
@@ -154,28 +167,27 @@ if(isset($_GET['q']) && $_GET['q'] == 'create') {
 		],
 	];
 
+	// prevent duplicate setup
 	if(!empty($config['passkey'])) {
 		$passkey = json_decode($config['passkey'], true);
 
 		$request['publicKey']['excludeCredentials'][] = [
 			'type' => "public-key",
-			'id' => $passkey['id'] // base64-encoded value
+			'id' => $passkey['id'] // Base64-encoded value (?)
 		];
 	}
 
-	header('Content-Type: application/json; charset=utf-8');
 	echo(json_encode($request));
 	exit();
 }
 
-if(isset($_GET['q']) && $_GET['q'] == 'login') {
-	
+if($action == 'login') {
+
 	$passkey_json = db_get_setting('passkey');
 	$passkey = null;
 	if($passkey_json) {
 		$passkey = json_decode($passkey_json, true);
 	}
-	//var_dump($passkey);
 
 	$create_auth = $passkey_json; // Only for debugging.
 
@@ -205,14 +217,12 @@ if(isset($_GET['q']) && $_GET['q'] == 'login') {
 		]
 	];
 
-	header('Content-Type: application/json; charset=utf-8');
 	echo(json_encode($request));
 	exit();
 }
 
-if(isset($_GET['q']) && $_GET['q'] == 'revoke') {
+if($action == 'revoke') {
 	if(!$config['logged_in']) {
-		header('Content-Type: application/json; charset=utf-8');
 		header('HTTP/1.0 401 Unauthorized');
 		echo(json_encode(['errors' => ['Unauthorized access!']]));
 		exit();
@@ -238,7 +248,7 @@ if(isset($_GET['q']) && $_GET['q'] == 'revoke') {
 	exit();
 }
 
-if(isset($_GET['q']) && $_GET['q'] == 'verify') {
+if($action == 'verify') {
 	$data = file_get_contents('php://input');
 	$errors = [];
 
@@ -264,15 +274,14 @@ if(isset($_GET['q']) && $_GET['q'] == 'verify') {
 	}
 
 	$client_data_json = base64_decode($webauthn_data['response']['clientDataJSON'] ?? '');
-
 	$client_data = json_decode($client_data_json, true);
 
 	$auth_data = base64_decode($webauthn_data['response']['authenticatorData']);
 
 	$auth_data_relying_party_id = substr($auth_data, 0, 32); // rpIdHash
-	$auth_data_flags            = substr($auth_data, 32, 1);
-	$auth_data_sign_count       = substr($auth_data, 33, 4);
-	$auth_data_sign_count       = intval(implode('', unpack('N*', $auth_data_sign_count))); // 32-bit unsigned big-endian integer
+	$auth_data_flags = substr($auth_data, 32, 1);
+	$auth_data_sign_count = substr($auth_data, 33, 4);
+	$auth_data_sign_count = intval(implode('', unpack('N*', $auth_data_sign_count))); // 32-bit unsigned big-endian integer
 
 	// Checks basic
 	if (($webauthn_data['id'] ?? '') !== $user_key_id) {
@@ -349,21 +358,16 @@ if(isset($_GET['q']) && $_GET['q'] == 'verify') {
 		$verify_data .= hash('sha256', $client_data_json, true); // Contains the $challenge
 
 		if (openssl_verify($verify_data, $signature, $key_ref, OPENSSL_ALGO_SHA256) === 1) {
-			// $errors[] = 'Success!';
 			$result = 1;
 
 			// set the login cookie
-			$host = get_host(false); // cookies are port-agnostic
-			$domain = ($host != 'localhost') ? $host : false;
-			$hash = hash('sha256', $config['installation_signature']);
-			setcookie('microblog_login', $hash, NOW+$config['cookie_life'], '/', $domain, false);
+			$config['logged_in'] = check_login(true);
 		} else {
 			$errors[] = 'Invalid signature.';
 			$result = -1;
 		}
 	}
 
-	header('Content-Type: application/json; charset=utf-8');
 	echo(json_encode([
 		'result' => $result,
 		'errors' => $errors

@@ -24,7 +24,7 @@ function check_login($force_login=false) {
 	// todo: improve this https://fishbowl.pastiche.org/2004/01/19/persistent_login_cookie_best_practice
 	if(isset($_COOKIE['microblog_login']) || $force_login == true) {
 		$hash = hash('sha256', $config['installation_signature']);
-		if($_COOKIE['microblog_login'] === $hash || $force_login == true) {
+		if((isset($_COOKIE['microblog_login']) && $_COOKIE['microblog_login'] === $hash) || $force_login == true) {
 			// correct auth data, extend cookie life
 			$host = get_host(false); // cookies are port-agnostic
 			$domain = ($host != 'localhost') ? $host : false;

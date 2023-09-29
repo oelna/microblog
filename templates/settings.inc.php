@@ -95,7 +95,7 @@
 					<dd><input id="s-admin-pass" name="s[admin_pass]" type="text" value="<?= $is_setup ? $settings['admin_pass'] : '' ?>" placeholder="Set a login password" autocomplete="new-password" /></dd>
 
 					<?php if(!$is_setup): ?><dt><label for="s-admin-passkey">Login Passkey</label></dt>
-					<dd><?php if(empty($config['passkey'])): ?><button class="button hidden" id="passkey-create">Create Passkey</button><?php endif; ?><span id="passkey-status"><?= !empty($config['passkey']) ? 'Passkey is set (<a href="/pk?q=revoke" id="passkey-revoke">revoke</a>)' : 'No passkey set' ?></span></dd><?php endif; ?>
+					<dd><?php if(empty($config['passkey'])): ?><button class="button hidden" id="passkey-create">Create Passkey</button><?php endif; ?><span id="passkey-status"><?= !empty($config['passkey']) ? 'Passkey is set (<a href="/pk/revoke" id="passkey-revoke">revoke</a>)' : 'No passkey set' ?></span></dd><?php endif; ?>
 
 					<dt><label for="s-app-token">App Token</label></dt>
 					<dd><input id="s-app-token" name="s[app_token]" type="text" value="<?= $settings['app_token'] ?? '' ?>" placeholder="A seperate password used for XMLRPC" /></dd>

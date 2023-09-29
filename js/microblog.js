@@ -1,5 +1,7 @@
 'use strict';
 
+import { PK } from './passkeys.js';
+
 document.documentElement.classList.remove('no-js');
 
 const textarea = document.querySelector('textarea[name="content"]');
@@ -192,212 +194,20 @@ if ('paintWorklet' in CSS) {
 	// CSS.paintWorklet.addModule('./js/squircle.js');
 }
 
-
 // PASSKEY SUPPORT
-
-// a lot of the following code has been taken from
-// https://github.com/craigfrancis/webauthn-tidy (BSD 3)
-// Copyright 2020 Craig Francis
-// with modifications by Arno Richter in 2023
-// for his Microblog software
-
-const PKCreate = document.querySelector('#passkey-create');
-const PKRevoke = document.querySelector('#passkey-revoke');
-const PKLogin = document.querySelector('#passkey-login');
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder('utf-8');
-
-function uint8array_to_base64(array) { // https://stackoverflow.com/a/12713326/6632
-	return window.btoa(String.fromCharCode.apply(null, array));
-}
-
-function uint8array_to_hex(array) { // https://stackoverflow.com/a/40031979/6632
-	return Array.prototype.map.call(array, function (x) {
-			return ('00' + x.toString(16)).slice(-2);
-		}).join('');
-}
-
-function uint8array_to_buffer(array) { // https://stackoverflow.com/a/54646864/6632
-	return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
-}
-
-function buffer_to_base64(buffer) {
-	return uint8array_to_base64(new Uint8Array(buffer));
-}
-
-function buffer_to_hex(buffer) {
-	return uint8array_to_hex(new Uint8Array(buffer));
-}
-
-function base64_to_uint8array(base64) { // https://stackoverflow.com/a/21797381/6632
-	var binary = window.atob(base64),
-		array = new Uint8Array(new ArrayBuffer(binary.length));
-
-	for (var k = (binary.length - 1); k >= 0; k--) {
-		array[k] = binary.charCodeAt(k);
-	}
-
-	return array;
-}
-
-function text_to_uint8array(text) {
-	if (!textEncoder) textEncoder = new TextEncoder();
-	return textEncoder.encode(text);
-}
-
-if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && PublicKeyCredential.isConditionalMediationAvailable) {
-	Promise.all([
-		PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
-		PublicKeyCredential.isConditionalMediationAvailable(),
-	]).then(results => {
-		if (results.every(r => r === true)) {
-			if(PKCreate) PKCreate.classList.remove('hidden');
-			if(PKLogin) PKLogin.classList.remove('hidden');
-			
-			document.documentElement.classList.add('passkeys');
-			mb.passkeys = true;
-		} else document.documentElement.classList.add('no-passkeys');
-	});
-}
-
-if(PKCreate) {
-	PKCreate.addEventListener('click', async function (e) {
-		e.preventDefault();
-
-		const optionsRequest = await fetch(mb.url.origin+'/pk?q=create', {
-			'method': 'GET',
-			'headers': {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
-			}
-		});
-		const options = await optionsRequest.json();
-
-		options['publicKey']['challenge'] = base64_to_uint8array(options['publicKey']['challenge']);
-		options['publicKey']['user']['id'] = text_to_uint8array(options['publicKey']['user']['id']);
-
-		if (options['publicKey']['excludeCredentials'].length > 0) {
-			for (var k = (options['publicKey']['excludeCredentials'].length - 1); k >= 0; k--) {
-				options['publicKey']['excludeCredentials'][k]['id'] = base64_to_uint8array(options['publicKey']['excludeCredentials'][k]['id']);
-			}
-		}
-
-		try {
-			const result = await navigator.credentials.create(options);
-		} catch (e) {
-			if (e.name == 'InvalidStateError') {
-				console.error('error', e.name, e.message);
-				alert('You already seem to have a passkey on file! You have to revoke it first to set a new one.');
-			} else {
-				console.error('error', e.name, e.message);
-			}
-			return false;
-		}
-
-		var output = {
-			'id':   result.id.replace(/-/g, '+').replace(/_/g, '/'), // Use normal base64, not base64url (rfc4648)
-			'type': result.type,
-			'response': {
-				'clientDataJSON':    buffer_to_base64(result.response.clientDataJSON),
-				'authenticatorData': buffer_to_base64(result.response.getAuthenticatorData()),
-				'publicKey':         buffer_to_base64(result.response.getPublicKey()),
-				'publicKeyAlg':      result.response.getPublicKeyAlgorithm()
-			}
-		};
-
-		const saveRequest = await fetch(mb.url.origin+'/pk?q=store', {
-			'method': 'POST',
-			'headers': {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
-			},
-			'body': JSON.stringify(output)
-		});
-		const response = await saveRequest.json();
-
-		if (response.result > -1) {
-			console.info('passkey setup successful', response.result);
-			document.querySelector('#passkey-status').innerText = 'New Passkey was saved!';
-		} else {
-			console.error('passkey setup failed (passkey already present in DB)', response.result);
-		}
-	});
-}
-
-if(PKRevoke) {
-	PKRevoke.addEventListener('click', async function (e) {
-		e.preventDefault();
-
-		if (window.confirm("Really remove your passkey?")) {
-			const request = await fetch(mb.url.origin+'/pk?q=revoke', {
-				'method': 'GET',
-				'headers': {
-					'Accept': 'application/json',
-					'Content-Type': 'application/json'
-				}
-			});
-			const response = await request.json();
-
-			if (response.result > -1) {
-				console.info('passkey removed from database');
-				document.querySelector('#passkey-status').innerText = 'Passkey was removed';
-			} else {
-				console.error('an error occurred while trying to remove the passkey!', response);
-			}
-		}
-	});
-}
-
-if(PKLogin) {
-	PKLogin.addEventListener('click', async function (e) {
-		e.preventDefault();
-
-		const optionsRequest = await fetch(mb.url.origin+'/pk?q=login', {
-			'method': 'GET',
-			'headers': {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
-			}
-		});
-		const options = await optionsRequest.json();
-		
-		options['publicKey']['challenge'] = base64_to_uint8array(options['publicKey']['challenge']);
-
-		for (var k = (options['publicKey']['allowCredentials'].length - 1); k >= 0; k--) {
-			options['publicKey']['allowCredentials'][k]['id'] = base64_to_uint8array(options['publicKey']['allowCredentials'][k]['id']);
-		}
-
-		const result = await navigator.credentials.get(options);
-
-		// Make result JSON friendly.
-		var output = {
-			'id':   result.id.replace(/-/g, '+').replace(/_/g, '/'), // Use normal base64, not base64url (rfc4648)
-			'type': result.type,
-			'response': {
-				'clientDataJSON':    buffer_to_base64(result.response.clientDataJSON),
-				'authenticatorData': buffer_to_base64(result.response.authenticatorData),
-				'signature':         buffer_to_base64(result.response.signature)
-			}
-		};
-
-		// Complete
-		const verifyRequest = await fetch(mb.url.origin+'/pk?q=verify', {
-			'method': 'POST',
-			'headers': {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
-			},
-			'body': JSON.stringify(output)
-		});
-		
-		const response = await verifyRequest.json();
-
-		if (response.result > -1) {
-			console.info('passkey verification successful', response.result);
-			// alert('Verification success!');
-			window.location.href = mb.url;
-		} else {
-			console.error('passkey verification failed', response.result);
-		}
-	});
-}
+const pk = new PK({
+	'urls': {
+		'home': mb.url.origin,
+		'create': mb.url.origin+'/pk/create',
+		'store': mb.url.origin+'/pk/store',
+		'login': mb.url.origin+'/pk/login',
+		'verify': mb.url.origin+'/pk/verify',
+		'revoke': mb.url.origin+'/pk/revoke'
+	},
+	'dom': {
+		'create': '#passkey-create',
+		'revoke': '#passkey-revoke',
+		'login': '#passkey-login',
+		'status': '#passkey-status'
+	},
+});
