@@ -27,7 +27,9 @@
 			rebuild_feeds();
 
 			if($config['activitypub'] == true) activitypub_notify_followers($id);
+			if(isset($config['at_enabled']) && $config['at_enabled'] == true) at_post_status($id);
 			if($config['ping'] == true) ping_microblog();
+			/*
 			if($config['crosspost_to_twitter'] == true) {
 				$twitter_response = json_decode(twitter_post_status($_POST['content']), true);
 
@@ -35,6 +37,7 @@
 					$message['message'] .= ' (But crossposting to twitter failed!)';
 				}
 			}
+			*/
 
 			header('Location: '.$config['url']);
 			die();

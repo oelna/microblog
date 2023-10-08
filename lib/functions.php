@@ -688,4 +688,10 @@ function twitter_post_status($status='') {
 	return $twitter->buildOauth($url, 'POST')->setPostfields($postfields)->performRequest();
 }
 
+// ActivityPub/Mastodon
 require_once(__DIR__.DS.'activitypub-functions.php');
+
+// AT Protocol/Bluesky
+if(isset($config['at_enabled']) && $config['at_enabled'] == true) {
+	require_once(__DIR__.DS.'atprotocol.php');
+}

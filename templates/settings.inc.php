@@ -177,6 +177,23 @@
 				</dl>
 			</fieldset>
 
+			<fieldset>
+				<legend>Bluesky/AT Protocol support</legend>
+				<dl>
+					<dt><label>Crosspost to Bluesky</label></dt>
+					<dd>
+						<label><input id="s-at-enabled" name="s[at_enabled]" type="radio" value="1"<?= ($settings['at_enabled'] ?? 0) == 1 ? ' checked' : '' ?> /> Active</label>
+						<label><input id="s-at-enabled" name="s[at_enabled]" type="radio" value="0"<?= ($settings['at_enabled'] ?? 0) == 0 ? ' checked' : '' ?> /> Inactive</label>
+					</dd>
+
+					<dt><label for="s-at-username">Bluesky user handle</label></dt>
+					<dd><input id="s-at-username" name="s[at_handle]" type="text" value="<?= $settings['at_handle'] ?? '' ?>" placeholder="@user.bsky.social" autocomplete="off" /></dd>
+
+					<dt><label for="s-at-password">Bluesky app password</label></dt>
+					<dd><input id="s-at-password" name="s[at_password]" type="password" value="<?= $settings['at_password'] ?? '' ?>" placeholder="Create app password in Bluesky settings" autocomplete="off" /></dd>
+				</dl>
+			</fieldset>
+
 			<div class="post-nav">
 				<input type="submit" name="settings" value="Save" class="button" />
 			</div>
