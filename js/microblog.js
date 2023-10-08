@@ -34,7 +34,6 @@ if (postForm) {
 		'attachments': []
 	};
 
-
 	if (droparea && attachmentsInput) {
 		if (useDragDrop) {
 			console.log('init with modern file attachments');
@@ -211,3 +210,14 @@ const pk = new PK({
 		'status': '#passkey-status'
 	},
 });
+
+// import scripts from themes
+try {
+	const themeScript = '/css/'+mb.theme.name+'/'+mb.theme.name+'.js';
+	await import(themeScript);
+
+	// const { THEME } = await import(themeScript);
+	// if (THEME) mb.theme.script = new THEME();
+} catch (e) {
+	console.error('Unable to load theme script', e);
+}

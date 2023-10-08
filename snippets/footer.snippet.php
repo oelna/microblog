@@ -12,7 +12,10 @@
 <script>
 	window.mb = {
 		'url': new URL('<?= $config['url'] ?>'),
-		'passkeys': false
+		'theme': {
+			'name': '<?= $config['theme'] ?>',
+			'script': null
+		}
 	};
 	// mostly used for passkey management
 </script>
