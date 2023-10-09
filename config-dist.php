@@ -75,4 +75,3 @@ unset($dir, $uri, $path_fragments, $path);
 
 // load functions
 require_once(ROOT.DS.'lib'.DS.'functions.php');
-require_once(ROOT.DS.'lib'.DS.'autolink.php');

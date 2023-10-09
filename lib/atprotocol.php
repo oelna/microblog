@@ -54,7 +54,7 @@
 
 	function at_parse_urls($text) {
 		$spans = [];
-		$pattern = '(?xi)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))';
+		$pattern = regex_patterns('url');
 
 		preg_match_all("#$pattern#i", $text, $matches, PREG_OFFSET_CAPTURE);
 
@@ -121,6 +121,7 @@
 
 		// IMAGES
 		$embeds = [];
+		$images = array_slice($images, 0, 4); // limit to max 4 images
 		foreach ($images as $image) {
 			$type = mime_content_type($image);
 
@@ -242,12 +243,13 @@
 			'text' => $text,
 			'createdAt' => at_datetime(microtime(true)),
 			// 'langs' => [ 'en' ],
-			'embed' => [
-				'$type' => "app.bsky.embed.images",
-				'images' => $embeds
-			],
-			'facets' => $facets
 		];
+		if(!empty($embeds)) $new_post['embed'] = [
+			'$type' => "app.bsky.embed.images",
+			'images' => $embeds
+		];
+		if(!empty($facets)) $new_post['facets'] = $facets;
+
 		// var_dump(json_encode($new_post));
 
 		$post_data = [
@@ -271,6 +273,7 @@
 		curl_close($ch);
 
 		$status = json_decode($server_output, true);
+		//var_dump($status);
 
 		return $status;
 	}

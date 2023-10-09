@@ -186,7 +186,7 @@ function db_get_attached_files($post_ids=[], $include_deleted=false) {
 
 	$result = [];
 	try {
-		
+
 		foreach($post_ids as $id) {
 			$statement->bindParam(':post_id', $id, PDO::PARAM_INT);
 			$statement->execute();
@@ -646,7 +646,7 @@ function rebuild_atom_feed($posts=[]) {
 		$feed .= '<id>'.($post['post_guid'] ? 'urn:uuid:'.$post['post_guid'] : $config['url'].'/'.$post['id']).'</id>'.NL;
 		$feed .= '<updated>'.$updated.'</updated>'.NL;
 		$feed .= '<published>'.$published.'</published>'.NL;
-		
+
 		if(!empty($post_images)) {
 			// todo: render attached images
 			$feed .= '<content type="text">'.$post['post_content'].'</content>'.NL;
@@ -662,6 +662,35 @@ function rebuild_atom_feed($posts=[]) {
 	if(file_put_contents($filename, $feed)) {
 		return true;
 	} else return false;
+}
+
+function regex_patterns($type='url') {
+	$pattern = '';
+	switch ($type) {
+		case 'url':
+			$pattern = '\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))';
+			break;
+	}
+	return $pattern;
+}
+
+function autolink($str) {
+	$pattern = regex_patterns('url');
+
+	// mask urls in href
+	$str = str_ireplace('href="http', 'href="xxxx', $str);
+
+	// replace all remaining urls with links
+	$str = preg_replace("#$pattern#i", '<a href="$1">$1</a>', $str);
+
+	// unmask hrefs
+	$str = str_ireplace('href="xxxx', 'href="http', $str);
+
+	// pretty up link text
+	$str = str_ireplace(['>http://', '>https://'], '>', $str);
+	$str = str_ireplace('/</a>', '</a>', $str);
+
+	return $str;
 }
 
 function uuidv4($data = null) { // https://stackoverflow.com/a/15875555/3625228
