@@ -1,10 +1,12 @@
-# Simple Microblog
+# Mini Microblog
 
 A simple PHP app that stores Twitter-like status updates in a sqlite database. It also generates a JSON feed, that can be used as a source for the [micro.blog](https://micro.blog/) service. It is aimed at people who would like to host their own micro.blog, but want to avoid using Wordpress for it.
 
+The app supports crossposting to Bluesky and also acts as a member of the Fediverse, in that eg. Mastodon/ActivityPub users can follow and like status updates.
+
 ![a screenshot of the microblog app](https://user-images.githubusercontent.com/1279725/34184164-9567a4b2-e51e-11e7-9317-d737ef3423f0.png)
 
-There is a timeline view of your own posts, as well as a simple 'compose post' page behind a login form. Right now, only a unique ID, the post content and creation timestamp, edit time and delete status are saved for each entry, so this is only suitable for one user. (Multiple users would each have to install in their own directories.)
+There is a timeline view of your own posts, as well as a simple 'compose post' page behind a login form. Right now, only a unique ID, the post content and creation timestamp, edit time and delete status are saved for each entry, so this is only suitable for one user.
 
 The entire design is inside a theme directory and [CSS file](css/microblog/microblog.css) and can be modified easily. The site HTML is pretty straightforward and should be easy to style.
 
@@ -25,13 +27,15 @@ The app requires at least PHP 7.2 and was tested on 8.1. It needs mbstring, curl
 ### Optional
 
 - modify the theme file [microblog.css](css/microblog/microblog.css)
-- do more configuration under `/settings`, eg. fill in ActivityPub info
+- do more configuration under `/settings`, eg. fill in ActivityPub and Bluesky info
 - set an `app_token` in [config.php](config-dist.php#L28) to use with XML-RPC
+- setup a Passkey to log in with
 
 ### To Do
 
 - test whether the [ping function](http://help.micro.blog/2017/api-feeds/) actually works
 - improve html rendering (?)
+- unify autolink regexes of `atprotocol.php` and `autolink.php`
 - support file attachments (started! can attach images to posts and remove them)
 - see issues
 
