@@ -126,7 +126,7 @@ function db_select_post($id=0) {
 	return (!empty($row)) ? $row : false;
 }
 
-function db_get_setting($key) {
+function db_get_setting($key, $raw=false) {
 	global $db;
 	if(empty($db) || empty($key)) return false;
 
@@ -135,7 +135,14 @@ function db_get_setting($key) {
 	$statement->execute();
 	$row = $statement->fetch(PDO::FETCH_ASSOC);
 
-	return (!empty($row)) ? $row['settings_value'] : false;
+	if(!empty($row)) {
+		if($raw) {
+			return $row;
+		} else {
+			return $row['settings_value'];
+		}
+	}
+	return false;
 }
 
 function db_set_setting($key, $value) {

@@ -90,15 +90,21 @@
 
 					if(!empty(path(1))) {
 						// get magic link
-						$bytes = db_get_setting('magic_url');
+						list('settings_value' => $bytes, 'settings_updated' => $age) = db_get_setting('magic_url', true);
 						if(empty($bytes)) exit('Invalid URL');
 
 						// validate
 						if(path(1) === $bytes) {
-							$config['logged_in'] = check_login(true); // force entry!
 
-							header('Location: '.$config['url'].'/settings');
-							exit();
+							// check link age (valid for 1h)
+							if($age > NOW - 3600) {
+								$config['logged_in'] = check_login(true); // force entry!
+
+								header('Location: '.$config['url'].'/settings');
+								exit('Success');
+							}
+
+							exit('Link has expired');
 						} else {
 							exit('Invalid URL');
 						}
