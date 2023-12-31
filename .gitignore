@@ -5,3 +5,4 @@ feeds/
 files/
 test.php
 log.txt
+.ddev/
