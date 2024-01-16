@@ -12,8 +12,6 @@
 		// allow the user in
 		$config['logged_in'] = check_login(true);
 
-		$settings = array_merge($default_settings, $old_config); // respect existing config file
-
 		// generate some values
 		if(empty($settings['app_token'])) {
 			$settings['app_token'] = bin2hex(random_bytes(16));
@@ -145,6 +143,18 @@
 
 					<dt><label for="s-cookie-life">Cookie lifetime in seconds</label></dt>
 					<dd><input id="s-cookie-life" name="s[cookie_life]" type="text" value="<?= $settings['cookie_life'] ?? '' ?>" placeholder="2419200" /></dd>
+					
+					<dt><label for="s-local_timezone">Local Time Zone</label></dt>
+					<dd><select id="s-local_timezone" name="s[local_timezone]"><?php 
+					$timezones= DateTimeZone::listIdentifiers();
+					foreach ($timezones as $timezone) {
+							$active = (($settings['local_timezone'] ?? '') == $timezone) ? ' selected' : '';
+							echo('<option value="'.$timezone.'"'.$active.'>'.$timezone.'</option>'.NL);
+					}
+					?></select>
+					</dd>
+
+
 				</dl>
 			</fieldset>
 
