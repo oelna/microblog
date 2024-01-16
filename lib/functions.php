@@ -556,7 +556,7 @@ function rebuild_feeds($amount=10) {
 }
 
 function rebuild_json_feed($posts=[]) {
-	global $config;
+	global $settings;
 
 	if (!file_exists(ROOT.DS.'feed')) {
 		mkdir(ROOT.DS.'feed', 0755);
@@ -566,13 +566,13 @@ function rebuild_json_feed($posts=[]) {
 
 	$feed = array(
 		'version' => 'https://jsonfeed.org/version/1',
-		'title' => 'status updates by '.$config['microblog_account'],
-		'description' => '',
-		'home_page_url' => $config['url'],
-		'feed_url' => $config['url'].'/feed/feed.json',
+		'title' => $settings['site_title'],
+		'description' => $settings['site_claim'],
+		'home_page_url' => $settings['url'],
+		'feed_url' => $settings['url'].'/feed/feed.json',
 		'user_comment' => '',
-		'favicon' => '',
-		'author' => array('name' => $config['microblog_account']),
+		'favicon' => $settings['site_image'],
+		'author' => array('name' => $settings['microblog_account']),
 		'items' => array()
 	);
 
@@ -587,10 +587,21 @@ function rebuild_json_feed($posts=[]) {
 		if(!empty($attachments)) {
 			foreach ($attachments as $a) {
 				$post_attachments[] = [
-					'url' => $config['url'] .'/'. get_file_path($a),
+					'url' => $settings['url'] .'/'. get_file_path($a),
 					'mime_type' => $a['file_mime_type'],
 					'size_in_bytes' => $a['file_size']
 				];
+			}
+		}
+
+		$html_imgs = "";
+
+		foreach ($attachments as $a) {
+			if(strpos($a['file_mime_type'], 'image') === 0){
+  				$abs = ROOT.DS.get_file_path($a);
+				list($width, $height, $_, $size_string) = getimagesize($abs);
+				$url = $settings['url'] .'/'. get_file_path($a);
+				$html_imgs .= "<p><img src=\"".$url."\" alt=\"".$a['file_original']."\" loading=\"lazy\"".$size_string." /></p>".NL;
 			}
 		}
 
@@ -599,10 +610,10 @@ function rebuild_json_feed($posts=[]) {
 		});
 
 		$feed['items'][] = array(
-			'id' => ($post['post_guid'] ? 'urn:uuid:'.$post['post_guid'] : $config['url'].'/'.$post['id']),
-			'url' => $config['url'].'/'.$post['id'],
+			'id' => ($post['post_guid'] ? 'urn:uuid:'.$post['post_guid'] : $settings['url'].'/'.$post['id']),
+			'url' => $settings['url'].'/'.$post['id'],
 			'title' => '',
-			'content_html' => $post['post_content'],
+			'content_html' => $post['post_content'].NL.$html_imgs,
 			'date_published' => gmdate('Y-m-d\TH:i:s\Z', $post['post_timestamp']),
 			'image' => !empty($post_images) ? $post_images[0]['url'] : '',
 			'attachments' => $post_attachments

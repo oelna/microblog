@@ -18,8 +18,6 @@ DEFINE('NL', "\n");
 DEFINE('BR', "<br />");
 DEFINE('NOW', time());
 
-date_default_timezone_set('Europe/Berlin');
-
 // set up database connection
 require_once(ROOT.DS.'lib'.DS.'database.php');
 
@@ -35,14 +33,6 @@ if(mb_strlen($path[0]) == 0) { $path = []; }
 $statement = $db->prepare('SELECT * FROM settings');
 $statement->execute();
 $settings_raw = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-if(!empty($settings_raw)) {
-	// create config array
-	$settings = array_column($settings_raw, 'settings_value', 'settings_key');
-} else {
-	// there were no settings in the DB. initialize!
-	$settings = [];
-}
 
 $default_settings = array(
 	'url' => '',
@@ -60,11 +50,25 @@ $default_settings = array(
 	'cookie_life' => 60*60*24*7*4,
 	'ping' => true,
 	'activitypub' => true,
-	'show_edits' => true
+	'show_edits' => true,
+	'local_timezone' => 'Europe/Berlin'
 );
 
-$old_config = $config ?? [];
-$config = $settings;
+if(!empty($settings_raw)) {
+	// create config array
+	$settings = array_column($settings_raw, 'settings_value', 'settings_key');
+} else {
+	// there were no settings in the DB. initialize!
+	$settings = [];
+	
+	$old_config = $config ?? [];
+	$settings = array_merge($default_settings, $old_config); // respect existing config file
+}
+
+$config = array_merge($default_settings, $settings); // handle fresh install case where $settings is mostly empty
+$settings = $config;  
+
+date_default_timezone_set($config['local_timezone']);
 $config['path'] = $path;
 $config['url_detected'] = 'http'.(!empty($_SERVER['HTTPS']) ? 's' : '').'://'.$_SERVER['HTTP_HOST'].rtrim($dir, '/');
 $config['subdir_install'] = ($dir === '/') ? false : true;
