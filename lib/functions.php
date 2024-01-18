@@ -59,7 +59,7 @@ function db_insert($content, $timestamp=NOW) {
 	if(empty($db)) return false;
 
 	$statement = $db->prepare('INSERT INTO posts (post_content, post_timestamp, post_guid) VALUES (:post_content, :post_timestamp, :post_guid)');
-	$statement->bindValue(':post_content', $content, PDO::PARAM_STR);
+	$statement->bindValue(':post_content', trim($content), PDO::PARAM_STR);
 	$statement->bindValue(':post_timestamp', $timestamp, PDO::PARAM_INT);
 	$statement->bindValue(':post_guid', uuidv4(), PDO::PARAM_STR);
 
@@ -105,7 +105,7 @@ function db_update($post_id, $content, $timestamp=null) {
 		$statement = $db->prepare('UPDATE posts SET post_content = :post_content, post_edited = :post_edited WHERE id = :id');
 	}
 	$statement->bindValue(':id', $post_id, PDO::PARAM_INT);
-	$statement->bindValue(':post_content', $content, PDO::PARAM_STR);
+	$statement->bindValue(':post_content', trim($content), PDO::PARAM_STR);
 	$statement->bindValue(':post_edited', time(), PDO::PARAM_INT);
 
 	$statement->execute();
@@ -555,7 +555,9 @@ function rebuild_feeds($amount=10) {
 	rebuild_atom_feed($posts);
 }
 
-function rebuild_json_feed($posts=[]) {
+function rebuild_json_feed($posts=[], $as_string=false, $relative=false) {
+	// 'as_string' will return a string instead of write to file
+
 	global $settings;
 
 	if (!file_exists(ROOT.DS.'feed')) {
@@ -563,6 +565,7 @@ function rebuild_json_feed($posts=[]) {
 	}
 
 	$filename = ROOT.DS.'feed'.DS.'feed.json';
+	$root = ($relative) ? './' : $settings['url'] .'/';
 
 	$feed = array(
 		'version' => 'https://jsonfeed.org/version/1',
@@ -587,7 +590,7 @@ function rebuild_json_feed($posts=[]) {
 		if(!empty($attachments)) {
 			foreach ($attachments as $a) {
 				$post_attachments[] = [
-					'url' => $settings['url'] .'/'. get_file_path($a),
+					'url' => $root . get_file_path($a),
 					'mime_type' => $a['file_mime_type'],
 					'size_in_bytes' => $a['file_size']
 				];
@@ -600,7 +603,7 @@ function rebuild_json_feed($posts=[]) {
 			if(strpos($a['file_mime_type'], 'image') === 0){
   				$abs = ROOT.DS.get_file_path($a);
 				list($width, $height, $_, $size_string) = getimagesize($abs);
-				$url = $settings['url'] .'/'. get_file_path($a);
+				$url = $root . get_file_path($a);
 				$html_imgs .= "<p><img src=\"".$url."\" alt=\"".$a['file_original']."\" loading=\"lazy\"".$size_string." /></p>".NL;
 			}
 		}
@@ -620,7 +623,10 @@ function rebuild_json_feed($posts=[]) {
 		);
 	}
 
-	if(file_put_contents($filename, json_encode($feed, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {
+	$json = json_encode($feed, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+	if($as_string) { return $json; }
+
+	if(file_put_contents($filename, $json)) {
 		return true;
 	} else return false;
 }
@@ -679,7 +685,8 @@ function regex_patterns($type='url') {
 	$pattern = '';
 	switch ($type) {
 		case 'url':
-			$pattern = '\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))';
+			// $pattern = '#\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))#i';
+			$pattern = '#(https?:\/\/(?:w{1,3}.)?[^\s]*?(?:\.[a-z]+)+)(?![^<]*?(?:<\/\w+>|\/?>))#i';
 			break;
 	}
 	return $pattern;
@@ -688,14 +695,16 @@ function regex_patterns($type='url') {
 function autolink($str) {
 	$pattern = regex_patterns('url');
 
-	// mask urls in href
+	// mask urls in href and src
 	$str = str_ireplace('href="http', 'href="xxxx', $str);
+	$str = str_ireplace('src="http', 'src="xxxx', $str);
 
 	// replace all remaining urls with links
-	$str = preg_replace("#$pattern#i", '<a href="$1">$1</a>', $str);
+	$str = preg_replace($pattern, '<a href="$1">$1</a>', $str);
 
 	// unmask hrefs
 	$str = str_ireplace('href="xxxx', 'href="http', $str);
+	$str = str_ireplace('src="xxxx', 'src="http', $str);
 
 	// pretty up link text
 	$str = str_ireplace(['>http://', '>https://'], '>', $str);
@@ -741,4 +750,9 @@ require_once(__DIR__.DS.'activitypub-functions.php');
 // AT Protocol/Bluesky
 if(isset($config['at_enabled']) && $config['at_enabled'] == true) {
 	require_once(__DIR__.DS.'atprotocol.php');
+}
+
+// .bar exporting
+if(class_exists('ZipArchive')) {
+	include_once(__DIR__.DS.'bar.php');
 }

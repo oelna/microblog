@@ -84,6 +84,22 @@
 			case 'inbox':
 				require_once(ROOT.DS.'lib'.DS.'activitypub-inbox.php');
 				break;
+			case 'bar':
+				if(function_exists('bar_create_zip') && $config['logged_in'] === true) {
+					if(!empty($_GET['delete'])) {
+						// delete archive file
+						echo('delete');
+						bar_remove($_GET['delete']);
+					} else {
+						// generate new archive
+						bar_create_zip();
+					}
+				} else {
+					http_response_code(403);
+					header('Location: '.$config['url'].'/');
+				}
+				header('Location: '.$config['url'].'/settings#archive');
+				break;
 			case 'recovery':
 				// password recovery via email
 				if(!empty($config['admin_email'])) {

@@ -204,6 +204,34 @@
 				</dl>
 			</fieldset>
 
+			<?php if(function_exists('bar_list')): ?><fieldset id="archive">
+				<legend>Export</legend>
+				<dl>
+					<dt><label >Archives</label></dt>
+					<dd>
+						<?php
+							$archives = bar_list();
+
+							//var_dump($archives);
+							//var_dump($settings);
+							if(empty($archives)) {
+								echo('<p>No archived versions</p>');
+							}
+						?>
+						<ul><?php foreach($archives as $a): ?>
+						<?php
+							$abn = basename($a);
+							list($_, $ts) = explode('-', pathinfo($abn, PATHINFO_FILENAME));
+							$nice_name = date('Y-m-d H:i:s', $ts);
+							$dl_name = 'mb-'.date('Y-m-d', $ts).'.bar';
+						?><li><a href="<?= $config['url'].'/files/bar/'.$abn ?>" download="<?= $dl_name ?>"><?= $nice_name ?></a> <a href="<?= $config['url'].'/bar/?delete='.$abn ?>" onclick="return confirm('Really delete archive <?= $nice_name ?>?')">(Delete)</a></li>
+						<?php endforeach; ?></ul>
+					</dd>
+
+					<dt><label for="s-bar-create"></label></dt>
+					<dd><a href="<?= $settings['url'] ?>/bar" class="button secondary">Create new archive</a></dd>
+			</fieldset><?php endif; ?>
+
 			<div class="post-nav">
 				<input type="submit" name="settings" value="Save" class="button" />
 			</div>
@@ -227,6 +255,9 @@
 
 					<dt><label>Installed on domain root</label></dt>
 					<dd><?= $config['subdir_install'] != 1 ? 'Yes' : 'No' ?></dd>
+
+					<dt><label>.bar export enabled</label></dt>
+					<dd><?= class_exists('ZipArchive') == 1 ? 'Yes' : 'No' ?></dd>
 				</dl>
 			</fieldset>
 			</details>
