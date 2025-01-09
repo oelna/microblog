@@ -46,7 +46,7 @@
 					}
 				?>
 				<?php if(!empty($passkey)): ?><button class="button hidden" id="passkey-login">Use Passkey</button><?php endif; ?>
-				<a href="/recovery">Forgot password</a>
+				<a href="#" data-request="<?= time() ?>" onclick="event.preventDefault(); if(confirm('Request recovery email?')){window.location.href='/recovery?token='+(Math.floor(Date.now()/1000))}">Forgot password</a>
 			</div>
 		</form>
 	</div>

@@ -125,6 +125,17 @@
 							exit('Invalid URL');
 						}
 					} else {
+						if (empty($_GET['token'])) {
+							header('Location: '.$config['url'].'/login?invalid');
+							break;
+						}
+
+						if ($_GET['token'] < time() - 60*5 ) {
+							// if not requested in the last 5 minutes
+							header('Location: '.$config['url'].'/login?invalid');
+							break;
+						}
+
 						// send a recovery email with link
 						$bytes = bin2hex(random_bytes(16));
 						$magic_link = $config['url'].'/recovery/'.$bytes;
@@ -133,6 +144,14 @@
 
 						$mailtext  = 'Your recovery link for Microblog:'.NL;
 						$mailtext .= $magic_link.NL;
+
+						// $browser = get_browser(null, true);
+						$mailtext .= NL.NL.'Request Information'.NL;
+						$mailtext .= 'IP: '.$_SERVER['REMOTE_ADDR'].NL;
+						$mailtext .= 'User Agent: '.$_SERVER['HTTP_USER_AGENT'].NL;
+						$mailtext .= 'Time: '.date('Y-m-d H:i:s', $_GET['token']).NL;
+						// $mailtext .= 'Browser: '.$browser['parent'].NL;
+						// $mailtext .= 'OS: '.$browser['platform'].NL;
 
 						$host = parse_url($config['url'], PHP_URL_HOST);
 						$headers = array(
@@ -143,7 +162,7 @@
 
 						if(mail(trim($config['admin_email']), 'Your Microblog recovery link', $mailtext, $headers)) {
 							// var_dump($mailtext);
-							header('Location: '.$config['url'].'/login/recovery');
+							header('Location: '.$config['url'].'/login/recovery?success');
 						} else {
 							exit('Could not send email with recovery link!');
 						}
