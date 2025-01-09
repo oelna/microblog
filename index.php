@@ -22,7 +22,7 @@
 	// check user credentials
 	$config['logged_in'] = check_login();
 
-	$config['show_edits'] = !empty($config['show_edits']) ? $config['show_edits'] : true;
+	$settings['show_edits'] = !empty($settings['show_edits']) ? $settings['show_edits'] : true;
 
 	// subpages
 	$template = 'timeline';
